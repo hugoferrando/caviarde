@@ -164,6 +164,15 @@ details ul b{color:var(--ink);font-weight:600}
 .key .w{font-family:var(--f-read);justify-self:start;padding:0 .15em}
 .key small{color:var(--ink-2)}
 .w{transition:none}
+.modes{display:inline-flex;border:1px solid var(--ink);border-radius:7px;overflow:hidden}
+.modes button{font:600 .9rem/1 var(--f-ui);letter-spacing:.02em;padding:.5em .85em;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.modes button+button{border-left:1px solid var(--ink)}
+.modes button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.modes button:focus-visible{outline:2px solid var(--pen);outline-offset:-3px}
+.sharebox{flex-basis:100%;display:grid;gap:6px}
+.sharebox textarea{width:100%;min-height:5.5em;font:400 .9rem/1.4 var(--f-num);padding:8px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);color:var(--ink);resize:vertical}
+.okline{color:var(--ok);font-size:.92rem;flex-basis:100%}
+.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
 .bar .wrap{grid-template-columns:minmax(0,1fr)}
 .bar .wrap>*{min-width:0}
 .legendbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;font-size:.84rem;color:var(--ink-2);max-width:760px}
@@ -178,6 +187,10 @@ details ul b{color:var(--ink);font-weight:600}
 <header class="top">
   <div class="wrap">
     <div class="mark" aria-label="Caviardé">CAVI<span class="redact">ARDÉ</span></div>
+    <div class="modes" role="group" aria-label="Mode de jeu">
+      <button type="button" id="mDaily" aria-pressed="false">Du jour</button>
+      <button type="button" id="mFree" aria-pressed="false">Illimité</button>
+    </div>
     <span class="meta" id="meta">Chargement…</span>
     <div class="actions">
       <button class="btn quiet" id="skip" type="button">Abandonner</button>
@@ -226,8 +239,8 @@ details ul b{color:var(--ink);font-weight:600}
       <p class="note">Un mot dans une case sombre reste à trouver : c'est seulement un indice. Le score de proximité va de 0 à 100 ; survolez une case pour le voir.</p>
     </section>
 
-    <section class="sec">
-      <h2><span>Articles</span></h2>
+    <section class="sec" id="srcSec">
+      <h2><span>Articles (mode illimité)</span></h2>
       <div class="src" role="radiogroup" aria-label="Source des articles">
         <label><input type="radio" name="src" id="srcKnown" value="known">
           <span>Sujets connus<small>Une sélection de plusieurs centaines de grands sujets : lieux, personnages, sciences, sports…</small></span></label>
@@ -244,6 +257,8 @@ details ul b{color:var(--ink);font-weight:600}
         <div><dt>Titres trouvés</dt><dd id="sWins">0</dd></div>
         <div><dt>Coups en moyenne</dt><dd id="sAvg">–</dd></div>
         <div><dt>Record</dt><dd id="sBest">–</dd></div>
+        <div><dt>Série du jour</dt><dd id="sStreak">0</dd></div>
+        <div><dt>Jours trouvés</dt><dd id="sDays">0</dd></div>
       </dl>
     </section>
 
@@ -374,7 +389,8 @@ async function randomTitle(){
 }
 function pickKnown(){
   const cur=ST?.article?.key;
-  let pool=KNOWN.filter(t=>!stats.played.includes(t) && t!==cur);
+  const today=dailyTitle(todayInfo().n);
+  let pool=KNOWN.filter(t=>!stats.played.includes(t) && t!==cur && t!==today);
   if(!pool.length){ stats.played=stats.played.filter(t=>!KNOWN.includes(t)); pool=KNOWN.filter(t=>t!==cur); }
   return pool[Math.floor(Math.random()*pool.length)];
 }
@@ -400,6 +416,128 @@ async function nextArticle(){
   LOADING=false;
   startArticle(art);
   if(offline || art.src==="local") feedback('<span class="warnline">Wikipédia est injoignable pour le moment : voici un article de secours. Réessayez « Article suivant » plus tard.</span>');
+}
+
+/* ---------- Article du jour ---------- */
+const LAUNCH = Date.UTC(2026,9,7);
+function todayInfo(){
+  const date = new Intl.DateTimeFormat("fr-CA",{timeZone:"Europe/Paris",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+  const [y,m,d]=date.split("-").map(Number);
+  return {date, n: Math.floor((Date.UTC(y,m-1,d)-LAUNCH)/86400000)+1};
+}
+function dayBefore(date){ const [y,m,d]=date.split("-").map(Number); return new Date(Date.UTC(y,m-1,d)-86400000).toISOString().slice(0,10); }
+const DAILY_ORDER = (()=>{ // ordre fixe, identique pour tout le monde
+  const a=[...new Set(KNOWN)]; let x=20261007;
+  const rnd=()=>{ x|=0; x=x+0x6D2B79F5|0; let t=Math.imul(x^x>>>15,1|x); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+})();
+const dailyTitle = n => DAILY_ORDER[((n-1)%DAILY_ORDER.length+DAILY_ORDER.length)%DAILY_ORDER.length];
+async function loadDaily(){
+  if(LOADING) return;
+  LOADING=true; showLoading();
+  const {date,n}=todayInfo();
+  let art=null, offline=false;
+  try{
+    for(let k=0; k<6 && !art; k++){ const key=dailyTitle(n+k*131); art=await loadByTitle(key); if(art) art.key=key; }
+  }catch(e){ offline=true; }
+  if(!art){ art={...ARTICLES[(n-1)%ARTICLES.length], src:"local"}; offline=true; }
+  art.daily={date,n};
+  LOADING=false;
+  startArticle(art);
+  if(offline) feedback('<span class="warnline">Wikipédia est injoignable : l\'article du jour de secours est affiché. Rechargez la page plus tard pour le vrai.</span>');
+}
+let PLAY = lsGet("caviarde.play","daily")==="free"?"free":"daily";
+const gameKey = () => PLAY==="daily" ? "caviarde.game.daily" : "caviarde.game";
+let dstats = Object.assign({hist:{},streak:0,lastWin:null}, lsGet("caviarde.dstats",{}));
+function boot(){
+  $("mDaily").setAttribute("aria-pressed",PLAY==="daily"); $("mFree").setAttribute("aria-pressed",PLAY==="free");
+  $("srcSec").hidden = PLAY==="daily";
+  const g=lsGet(gameKey(),null);
+  if(PLAY==="daily"){
+    const {date}=todayInfo();
+    if(g && g.article?.daily?.date===date && restore(g)) resumed();
+    else loadDaily();
+  }else{
+    if(restore(g)) resumed(); else nextArticle();
+  }
+}
+function resumed(){
+  if(ST.done) feedback(ST.article.daily?"Article du jour terminé. Revenez demain, ou jouez en illimité en attendant.":"Partie terminée. Passez à l'article suivant quand vous voulez.");
+  else{ const g=ST.guesses.find(x=>x.n===ST.last); feedback(g?"Partie reprise. Dernière proposition : "+guessLine(g):"Partie reprise."); }
+}
+function switchMode(m){
+  if(m===PLAY || LOADING) return;
+  if(ST) save();
+  PLAY=m; lsSet("caviarde.play",PLAY);
+  boot();
+}
+
+/* ---------- Feux d'artifice ---------- */
+function fireworks(){
+  if(reduceMotion()) return;
+  const cv=document.createElement("canvas"); cv.className="fx"; cv.setAttribute("aria-hidden","true");
+  document.body.append(cv);
+  const ctx=cv.getContext("2d"), dpr=Math.min(2,window.devicePixelRatio||1);
+  let W=0,H=0;
+  const resize=()=>{ W=innerWidth; H=innerHeight; cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); };
+  resize(); addEventListener("resize",resize);
+  const cs=getComputedStyle(document.documentElement);
+  const cols=["--near3","--near2","--pen","--ok","--heat3"].map(v=>cs.getPropertyValue(v).trim()).filter(Boolean).concat(["#FF5D73","#5CC8FF","#B98CFF"]);
+  const pick=()=>cols[Math.floor(Math.random()*cols.length)];
+  const rockets=[], parts=[], N=8, G=0.05, t0=performance.now();
+  let launched=0;
+  function launch(){
+    const x=W*(0.15+Math.random()*0.7), ty=H*(0.12+Math.random()*0.3);
+    rockets.push({x, y:H+10, vx:(Math.random()-0.5)*1.4, vy:-Math.sqrt(2*G*(H+10-ty)), c:pick()});
+  }
+  function burst(r){
+    const n=70+Math.floor(Math.random()*50), ring=Math.random()<0.35, c2=pick();
+    for(let i=0;i<n;i++){
+      const a=Math.PI*2*i/n+Math.random()*0.2, sp=ring?3.6:1+Math.random()*3.8;
+      parts.push({x:r.x, y:r.y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1, decay:0.011+Math.random()*0.012, c:Math.random()<0.25?c2:r.c, s:1.4+Math.random()*1.6});
+    }
+  }
+  function frame(now){
+    const el=now-t0;
+    while(launched<N && el>launched*420){ launch(); launched++; }
+    ctx.globalCompositeOperation="destination-out";
+    ctx.fillStyle="rgba(0,0,0,0.24)"; ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation="source-over";
+    for(let i=rockets.length-1;i>=0;i--){
+      const r=rockets[i]; r.x+=r.vx; r.y+=r.vy; r.vy+=G;
+      ctx.fillStyle=r.c; ctx.beginPath(); ctx.arc(r.x,r.y,2.2,0,Math.PI*2); ctx.fill();
+      if(r.vy>=-0.6){ burst(r); rockets.splice(i,1); }
+    }
+    for(let i=parts.length-1;i>=0;i--){
+      const p=parts[i]; p.vx*=0.985; p.vy=p.vy*0.985+G*0.9; p.x+=p.vx; p.y+=p.vy; p.life-=p.decay;
+      if(p.life<=0){ parts.splice(i,1); continue; }
+      ctx.globalAlpha=Math.max(0,p.life); ctx.fillStyle=p.c;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    if((launched>=N && !rockets.length && !parts.length) || el>12000){ removeEventListener("resize",resize); cv.remove(); return; }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- Partage ---------- */
+async function shareResult(){
+  const g=ST.guesses.length, url=location.origin+location.pathname;
+  const pct=WORDS.length?Math.round(100*WORDS.filter(t=>t.rev).length/WORDS.length):0;
+  const bar="▰".repeat(Math.round(pct/10))+"▱".repeat(10-Math.round(pct/10));
+  const d=ST.article.daily;
+  let txt = d
+    ? (ST.won?`J'ai trouvé le Caviardé du jour n°${d.n} en ${plural(g,"coup")} !`:`Le Caviardé du jour n°${d.n} m'a eu après ${plural(g,"coup")}.`)
+    : (ST.won?`J'ai trouvé un article Caviardé en ${plural(g,"coup")}. Tu fais mieux ?`:`J'ai séché sur un article Caviardé après ${plural(g,"coup")}.`);
+  txt += `\nTexte révélé : ${bar} ${pct} %\n${url}`;
+  const box=$("shareBox");
+  try{ if(navigator.share){ await navigator.share({text:txt}); return; } }catch(e){ if(e && e.name==="AbortError") return; }
+  try{ await navigator.clipboard.writeText(txt); box.replaceChildren(); const ok=document.createElement("span"); ok.className="okline"; ok.textContent="Résultat copié : colle-le où tu veux."; box.append(ok); box.hidden=false; return; }catch(e){}
+  box.replaceChildren(); const ta=document.createElement("textarea"); ta.id="shareText"; ta.readOnly=true; ta.value=txt;
+  const lb=document.createElement("span"); lb.className="note"; lb.textContent="Copie ce texte pour partager ton résultat :";
+  box.append(lb,ta); box.hidden=false; ta.focus(); ta.select();
 }
 
 /* ---------- Proximité sémantique ---------- */
@@ -508,11 +646,11 @@ function newState(article){
 function startArticle(article){
   ST = newState(article);
   const key=article.key||article.t;
-  if(article.src==="wiki" && mode!=="random" && !stats.played.includes(key)) stats.played.push(key);
+  if(!article.daily && article.src==="wiki" && mode!=="random" && !stats.played.includes(key)) stats.played.push(key);
   lsSet("caviarde.stats", stats);
   document.querySelector("article").classList.remove("loading");
   build(); render(); save();
-  feedback("Nouvel article. Tout est masqué, même les petits mots : chaque mot proposé se révèle partout où il apparaît.");
+  feedback(article.daily?`Article du jour n°${article.daily.n} : le même pour tout le monde aujourd'hui. Tout est masqué, même les petits mots.`:"Nouvel article. Tout est masqué, même les petits mots : chaque mot proposé se révèle partout où il apparaît.");
   $("guess").value=""; $("guess").disabled=false; $("go").disabled=false;
   $("guess").focus({preventScroll:true});
   window.scrollTo({top:0});
@@ -531,7 +669,7 @@ function showLoading(){
   feedback("Chargement d'un article Wikipédia…");
 }
 function save(){
-  lsSet("caviarde.game", {article:ST.article, guesses:ST.guesses, near:ST.near, last:ST.last, done:ST.done, won:ST.won});
+  lsSet(gameKey(), {article:ST.article, guesses:ST.guesses, near:ST.near, last:ST.last, done:ST.done, won:ST.won});
 }
 function restore(g){
   if(!g || !g.article || typeof g.article.t!=="string" || typeof g.article.x!=="string") return false;
@@ -594,7 +732,8 @@ function render(){
 }
 function renderSide(){
   const n=ST.guesses.length;
-  $("meta").textContent=(ST.article.src==="wiki"?"Wikipédia":"Article de secours")+" · "+plural(n,"coup");
+  $("meta").textContent=(ST.article.daily?"Du jour n°"+ST.article.daily.n:ST.article.src==="wiki"?"Wikipédia":"Article de secours")+" · "+plural(n,"coup");
+  $("sStreak").textContent=dstats.streak; $("sDays").textContent=Object.values(dstats.hist).filter(h=>h.won).length;
   $("gcount").textContent=n;
   $("gempty").hidden=n>0;
   $("from").textContent=ST.article.src==="wiki"?"Début d'un article de Wikipédia, l'encyclopédie libre":"Article de secours (Wikipédia injoignable)";
@@ -633,11 +772,18 @@ function renderBanner(){
     small.append(a);
   }
   msg.append(small);
+  if(ST.article.daily){
+    const t2=document.createElement("small"); t2.textContent=`Prochain article du jour (n°${ST.article.daily.n+1}) demain à minuit.`; msg.append(t2);
+  }
   const btns=document.createElement("div"); btns.className="btns";
-  const next=document.createElement("button"); next.className="btn primary"; next.type="button"; next.id="next"; next.textContent="Article suivant";
-  next.onclick=nextArticle;
-  btns.append(next);
-  b.append(msg,btns);
+  const share=document.createElement("button"); share.className="btn"; share.type="button"; share.id="shareBtn"; share.textContent="Partager mon résultat";
+  share.onclick=shareResult;
+  const next=document.createElement("button"); next.className="btn primary"; next.type="button"; next.id="next";
+  if(ST.article.daily){ next.textContent="Jouer en illimité"; next.onclick=()=>switchMode("free"); }
+  else { next.textContent="Article suivant"; next.onclick=nextArticle; }
+  btns.append(next,share);
+  const box=document.createElement("div"); box.className="sharebox"; box.id="shareBox"; box.hidden=true;
+  b.append(msg,btns,box);
 }
 
 /* ---------- Propositions ---------- */
@@ -688,10 +834,21 @@ function submit(raw){
 }
 function finish(won){
   ST.done=true; ST.won=won;
-  stats.games++;
-  if(won){ stats.wins++; stats.guessSum+=ST.guesses.length; stats.best=stats.best==null?ST.guesses.length:Math.min(stats.best,ST.guesses.length); }
-  lsSet("caviarde.stats",stats);
+  if(ST.article.daily){
+    const {date}=ST.article.daily;
+    if(!dstats.hist[date]){
+      dstats.hist[date]={won, guesses:ST.guesses.length};
+      if(won){ dstats.streak = dstats.lastWin===dayBefore(date) ? dstats.streak+1 : 1; dstats.lastWin=date; }
+      else dstats.streak=0;
+      lsSet("caviarde.dstats",dstats);
+    }
+  }else{
+    stats.games++;
+    if(won){ stats.wins++; stats.guessSum+=ST.guesses.length; stats.best=stats.best==null?ST.guesses.length:Math.min(stats.best,ST.guesses.length); }
+    lsSet("caviarde.stats",stats);
+  }
   render(); save();
+  if(won) fireworks();
   $("next")?.focus({preventScroll:true});
   window.scrollTo({top:0,behavior:reduceMotion()?"auto":"smooth"});
 }
@@ -731,10 +888,9 @@ document.querySelectorAll('input[name="src"]').forEach(r=>r.addEventListener("ch
 
 /* ---------- Démarrage ---------- */
 loadVectors();
-if(restore(lsGet("caviarde.game",null))){
-  if(ST.done) feedback("Partie terminée. Passez à l'article suivant quand vous voulez.");
-  else{ const g=ST.guesses.find(x=>x.n===ST.last); feedback(g?"Partie reprise. Dernière proposition : "+guessLine(g):"Partie reprise."); }
-}else nextArticle();
+$("mDaily").addEventListener("click",()=>switchMode("daily"));
+$("mFree").addEventListener("click",()=>switchMode("free"));
+boot();
 </script>
 </body>
 </html>
