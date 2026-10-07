@@ -147,6 +147,31 @@ details ul b{color:var(--ink);font-weight:600}
 .h.peek{font-family:var(--f-num);font-style:normal;font-weight:500;color:var(--paper);background:var(--bar)!important;padding:0 .12em}
 .vstat{font-size:.92rem;color:var(--ink-2);margin:0}
 .vstat b{color:var(--ink);font-weight:600}
+/* Code couleur : tout ce qui est dans une case sombre est encore caché */
+:root{--near1:#B9C2BF;--near2:#F5C451;--near3:#FF7B42;--fresh:#D9E1FB}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){--near1:#A3ACB2;--near2:#EDBE52;--near3:#FF8A55;--fresh:#24345F} }
+:root[data-theme="dark"]{--near1:#A3ACB2;--near2:#EDBE52;--near3:#FF8A55;--fresh:#24345F}
+.h.near,.h.heat1,.h.heat2,.h.heat3{background:var(--bar)}
+.h.heat1{color:var(--near1);font-weight:400}
+.h.heat2{color:var(--near2);font-weight:500}
+.h.heat3{color:var(--near3);font-weight:600}
+.w.fresh{background:var(--fresh);color:var(--ink);box-shadow:0 0 0 .12em var(--fresh);border-bottom:2px solid var(--pen);border-radius:3px 3px 0 0}
+.gl .gn.heat1,.gl .gn.heat2,.gl .gn.heat3{background:var(--bar)}
+.gl .gn.heat1{color:var(--near1)} .gl .gn.heat2{color:var(--near2)} .gl .gn.heat3{color:var(--near3)}
+.key{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:7px;font-size:.92rem}
+.key li{display:grid;grid-template-columns:5.6rem minmax(0,1fr);gap:10px;align-items:center}
+.key .h{font-family:var(--f-ui);cursor:default;justify-self:start}
+.key .w{font-family:var(--f-read);justify-self:start;padding:0 .15em}
+.key small{color:var(--ink-2)}
+.w{transition:none}
+.bar .wrap{grid-template-columns:minmax(0,1fr)}
+.bar .wrap>*{min-width:0}
+.legendbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;font-size:.84rem;color:var(--ink-2);max-width:760px}
+.legendbar .lg{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.legendbar .w{font-family:var(--f-read);color:var(--ink);padding:0 .15em}
+.legendbar .h{min-width:0;height:auto;line-height:1.5;padding:0 .45em;cursor:default;font-style:italic;vertical-align:baseline}
+.legendbar .note-inline{font-style:italic}
+@media (max-width:480px){.legendbar{gap:5px 12px;font-size:.8rem}.legendbar .note-inline{display:none}}
 </style>
 </head>
 <body>
@@ -168,6 +193,14 @@ details ul b{color:var(--ink);font-weight:600}
       <button class="btn primary" type="submit" id="go">Essayer</button>
     </form>
     <div class="fb" id="fb" aria-live="polite">Chargement d'un article Wikipédia…</div>
+    <div class="legendbar" aria-label="Code couleur">
+      <span class="lg"><span class="w">volcan</span> trouvé</span>
+      <span class="lg"><span class="w fresh">lave</span> dernière proposition</span>
+      <span class="lg"><span class="h heat3">très proche</span></span>
+      <span class="lg"><span class="h heat2">proche</span></span>
+      <span class="lg"><span class="h heat1">lointain</span></span>
+      <span class="lg note-inline">case sombre = encore à trouver</span>
+    </div>
   </div>
 </div>
 
@@ -189,7 +222,8 @@ details ul b{color:var(--ink);font-weight:600}
 
     <section class="sec">
       <h2><span>Mots proches</span></h2>
-      <p class="vstat" id="vstat">Chargement du dictionnaire de proximité (6,5 Mo)…</p>
+      <p class="vstat" id="vstat">Chargement du dictionnaire de proximité (7 Mo)…</p>
+      <p class="note">Un mot dans une case sombre reste à trouver : c'est seulement un indice. Le score de proximité va de 0 à 100 ; survolez une case pour le voir.</p>
     </section>
 
     <section class="sec">
@@ -218,8 +252,8 @@ details ul b{color:var(--ink);font-weight:600}
         <summary>Comment jouer</summary>
         <ul>
           <li>Un article Wikipédia est caché : chaque case noire est un mot, sa largeur suit le nombre de lettres. <b>Touchez une case</b> pour voir ce nombre.</li>
-          <li>Tout est masqué au départ, y compris « le », « de » ou « un ». Proposez un mot : il apparaît partout dans le texte, pluriel et féminin compris. « le » ou « la » révèlent aussi « l' », « de » révèle « d' ». Majuscules et accents ne comptent pas.</li>
-          <li>Si votre mot est proche par le sens d'un mot caché, il s'inscrit dans sa case, comme sur Pédantix : <span class="legend"><i style="background:var(--heat1)"></i><i style="background:var(--heat2)"></i><i style="background:var(--heat3)"></i></span> du plus lointain au plus proche. Chaque case garde le mot le plus proche proposé.</li><li>Un mot que le jeu ne connaît pas n'est pas compté.</li>
+          <li>Tout est masqué au départ, y compris « le », « de » ou « un ». Proposez un mot : il apparaît partout dans le texte, sous toutes ses formes (pluriel, féminin, conjugaisons : « sont » révèle aussi « est », « était », « être »…). « le » ou « la » révèlent aussi « l' », « de » révèle « d' ». Majuscules et accents ne comptent pas.</li>
+          <li>Si votre mot est proche par le sens d'un mot caché, il s'inscrit dans sa case sombre, comme sur Pédantix : en gris si le lien est lointain, en jaune s'il est proche, en orange s'il est très proche. Chaque case garde le mot le plus proche proposé.</li><li>Un mot que le jeu ne connaît pas n'est pas compté.</li>
           <li>La partie est gagnée quand tous les mots du titre sont découverts, petits mots compris. Ensuite, passez à l'article suivant, autant de fois que vous voulez.</li>
         </ul>
       </details>
@@ -386,6 +420,19 @@ async function loadVectors(){
     const idx=new Map(), nidx=new Map();
     words.forEach((w,i)=>{ idx.set(w,i); const k=norm(w); if(!nidx.has(k)) nidx.set(k,i); });
     VEC={n,dim,data,norms,idx,nidx};
+    const off=16+wl+n*dim;
+    if(buf.byteLength>=off+8 && String.fromCharCode(...new Uint8Array(buf,off,4))==="LEMM"){
+      const ll=dv.getUint32(off+4,true);
+      const txt=new TextDecoder().decode(new Uint8Array(buf,off+8,ll));
+      const lem=new Map(), nlem=new Map(), lemv=new Set();
+      for(const line of txt.split("\n")){
+        const tab=line.indexOf("\t"); if(tab<0) continue;
+        const L=line.slice(0,tab); lemv.add(L);
+        for(const f of line.slice(tab+1).split(" ")){ lem.set(f,L); const k=norm(f); if(!nlem.has(k)) nlem.set(k,L); }
+      }
+      LEX={lem,nlem,lemv};
+    }
+    applyLemmas();
     vecStatus(`<b>Actif.</b> Les mots proches par le sens s'affichent dans les cases (${n.toLocaleString("fr-FR")} mots connus).`);
   }catch(e){
     VEC=null;
@@ -407,6 +454,39 @@ function cosine(i,j){
   return s/(VEC.norms[i]*VEC.norms[j]);
 }
 
+/* ---------- Formes d'un même mot (conjugaisons, pluriels…) ---------- */
+let LEX=null, KEYS=new Map();
+function lemmaKey(w){
+  if(!LEX) return null;
+  const l=w.toLowerCase().replace(/’/g,"'");
+  if(LEX.lem.has(l)) return norm(LEX.lem.get(l));
+  if(LEX.lemv.has(l) || (VEC && VEC.idx.has(l))) return norm(l);
+  const k=norm(w);
+  if(LEX.nlem.has(k)) return norm(LEX.nlem.get(k));
+  if(VEC && VEC.nidx.has(k)) return k;
+  return null;
+}
+function gkey(word){
+  let k=KEYS.get(word);
+  if(!k){ const n=norm(word); k={n, s:stem(n), l:lemmaKey(word)}; KEYS.set(word,k); }
+  return k;
+}
+function keyOfN(n){ const g=ST.guesses.find(x=>x.n===n); return g?gkey(g.word):{n,s:stem(n),l:null}; }
+function matches(t,k){
+  if(t.n===k.n) return true;
+  if(ELIDE[k.n]!==undefined && t.n===ELIDE[k.n]) return true;
+  const tl = t.proper ? t.n : t.l;
+  if(tl && k.l) return tl===k.l;
+  return t.s===k.s;
+}
+function recomputeRev(){ const ks=ST.guesses.map(g=>gkey(g.word)); for(const t of WORDS) t.rev=ks.some(k=>matches(t,k)); }
+function applyLemmas(){
+  KEYS=new Map();
+  if(!ST) return;
+  for(const t of WORDS) t.l=lemmaKey(t.w);
+  recomputeRev(); render();
+}
+
 /* ---------- Partie ---------- */
 function mkWord(raw, title){ const n=norm(raw); return {w:raw, n, s:stem(n), fn:STOP.has(n), len:[...raw].length, title:!!title, el:null}; }
 function tokenize(text, title){
@@ -418,11 +498,11 @@ function tokenize(text, title){
   if(last<text.length) out.push({sep:text.slice(last)});
   return out;
 }
-const matches = (t,g) => t.n===g || t.s===stem(g) || (ELIDE[g]!==undefined && t.n===ELIDE[g]);
-const isRev = t => ST.revN.has(t.n) || ST.revS.has(t.s);
+const isRev = t => !!t.rev;
 
 function newState(article){
-  return {article, guesses:[], revN:new Set(), revS:new Set(), near:{}, last:null, spot:null, done:false, won:false,
+  KEYS=new Map();
+  return {article, guesses:[], near:{}, last:null, spot:null, done:false, won:false,
     titleToks:tokenize(article.t,true), paras:article.x.trim().split(/\n\s*\n/).map(p=>tokenize(p.trim(),false))};
 }
 function startArticle(article){
@@ -451,13 +531,12 @@ function showLoading(){
   feedback("Chargement d'un article Wikipédia…");
 }
 function save(){
-  lsSet("caviarde.game", {article:ST.article, guesses:ST.guesses, revN:[...ST.revN], revS:[...ST.revS], near:ST.near, last:ST.last, done:ST.done, won:ST.won});
+  lsSet("caviarde.game", {article:ST.article, guesses:ST.guesses, near:ST.near, last:ST.last, done:ST.done, won:ST.won});
 }
 function restore(g){
   if(!g || !g.article || typeof g.article.t!=="string" || typeof g.article.x!=="string") return false;
   ST = newState(g.article);
   ST.guesses = Array.isArray(g.guesses)?g.guesses:[];
-  ST.revN = new Set(g.revN||[]); ST.revS = new Set(g.revS||[]);
   ST.near = g.near||{}; ST.last=g.last||null; ST.done=!!g.done; ST.won=!!g.won;
   build(); render(); return true;
 }
@@ -471,18 +550,30 @@ function build(){
   WORDS=[]; $("title").replaceChildren(); $("body").replaceChildren();
   for(const t of ST.titleToks) $("title").append(nodeFor(t));
   for(const para of ST.paras){ const p=document.createElement("p"); for(const t of para) p.append(nodeFor(t)); $("body").append(p); }
+  // noms propres : majuscule en milieu de phrase et jamais en minuscule dans le texte
+  const capMid=new Set(), lower=new Set();
+  for(const para of ST.paras){
+    let start=true;
+    for(const t of para){
+      if(t.sep!==undefined){ if(/[.!?…:][\s«»"()]*$/.test(t.sep)) start=true; continue; }
+      if(/^\p{Lu}/u.test(t.w)){ if(!start) capMid.add(t.n); } else lower.add(t.n);
+      start=false;
+    }
+  }
+  for(const t of WORDS){ t.proper = capMid.has(t.n) && !lower.has(t.n); t.l = lemmaKey(t.w); }
+  recomputeRev();
 }
 const heat = s => s>=66?3:s>=54?2:1;
 const NEAR_MIN = 43;
 function render(){
-  const lastN=ST.last, spot=ST.spot;
+  const lastK=ST.last?keyOfN(ST.last):null, spotK=ST.spot?keyOfN(ST.spot):null, spot=ST.spot;
   for(const t of WORDS){
     const el=t.el, rev=isRev(t);
     if(rev || ST.done){
       let c="w";
       if(!rev) c+=" late";
-      else if(lastN && matches(t,lastN) && !ST.done) c+=" fresh";
-      if(spot && matches(t,spot)) c+=" spot";
+      else if(lastK && matches(t,lastK) && !ST.done) c+=" fresh";
+      if(spotK && matches(t,spotK)) c+=" spot";
       el.className=c;
       if(el.textContent!==t.w) el.textContent=t.w;
       el.removeAttribute("title"); el.removeAttribute("tabindex"); el.removeAttribute("role"); el.removeAttribute("aria-label");
@@ -494,7 +585,7 @@ function render(){
       el.style.setProperty("--len",t.len);
       el.dataset.len=t.len;
       el.textContent=t.peek?String(t.len):nr?nr.word:"";
-      el.title=nr?`« ${nr.word} » est proche · ${t.len} lettres`:`${t.len} lettres`;
+      el.title=nr?`« ${nr.word} » : proximité ${nr.score}/100 · ${t.len} lettres`:`${t.len} lettres`;
       el.setAttribute("role","button"); el.tabIndex=0;
       el.setAttribute("aria-label", nr?`mot caché de ${t.len} lettres, proche de ${nr.word}`:`mot caché de ${t.len} lettres`);
     }
@@ -567,11 +658,12 @@ function submit(raw){
   if(prev){ ST.spot=g; render(); feedback(`Déjà proposé (n°${prev.i}). `+guessLine(prev)); scrollToSpot(); return; }
 
   const entry={word, n:g, i:ST.guesses.length+1, count:0, near:0, best:0, title:false};
-  for(const t of WORDS) if(matches(t,g)){ entry.count++; if(t.title) entry.title=true; }
+  const key=gkey(word);
+  for(const t of WORDS) if(matches(t,key)){ entry.count++; if(t.title) entry.title=true; }
   const gi = VEC && !isNum(g) ? vecIndex(word) : -1;
   if(VEC && gi<0 && entry.count===0 && !isNum(g)){ feedback(`<b>« ${esc(word)} »</b> : mot inconnu, non compté. Vérifiez l'orthographe.`); return; }
   ST.guesses.push(entry);
-  ST.revN.add(g); ST.revS.add(stem(g)); if(ELIDE[g]) ST.revN.add(ELIDE[g]);
+  for(const t of WORDS) if(!t.rev && matches(t,key)) t.rev=true;
   ST.last=g; ST.spot=null;
 
   if(!isNum(g) && !STOP.has(g)){
