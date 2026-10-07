@@ -85,7 +85,6 @@ article{min-width:0;max-width:68ch}
 .w.late{color:var(--ink-2);text-decoration:underline dotted color-mix(in srgb,var(--ink-2) 60%,transparent);text-underline-offset:.2em}
 .w.spot,.h.spot{outline:2px solid var(--pen);outline-offset:1px}
 .h{display:inline-block;min-width:calc(var(--len) * .56em);height:1.2em;line-height:1.2em;vertical-align:-.22em;background:var(--bar);border-radius:3px;text-align:center;cursor:pointer;font-family:var(--f-ui);font-style:italic;font-weight:500;color:var(--heat-ink);padding:0 .12em;white-space:nowrap}
-.h.peek::after{content:attr(data-len);font:500 .66em/1 var(--f-num);font-style:normal;color:var(--paper);vertical-align:.15em}
 .h.near{padding:0 .3em}
 .h.heat1{background:var(--heat1)}
 .h.heat2{background:var(--heat2)}
@@ -145,6 +144,9 @@ details ul b{color:var(--ink);font-weight:600}
 .src input{margin-top:.25em;accent-color:var(--pen);width:1.05em;height:1.05em}
 .src small{display:block;color:var(--ink-2);font-size:.84rem;margin-top:2px}
 .warnline{color:var(--heat3);font-size:.9rem}
+.h.peek{font-family:var(--f-num);font-style:normal;font-weight:500;color:var(--paper);background:var(--bar)!important;padding:0 .12em}
+.vstat{font-size:.92rem;color:var(--ink-2);margin:0}
+.vstat b{color:var(--ink);font-weight:600}
 </style>
 </head>
 <body>
@@ -186,6 +188,11 @@ details ul b{color:var(--ink);font-weight:600}
     </section>
 
     <section class="sec">
+      <h2><span>Mots proches</span></h2>
+      <p class="vstat" id="vstat">Chargement du dictionnaire de proximité (6,5 Mo)…</p>
+    </section>
+
+    <section class="sec">
       <h2><span>Articles</span></h2>
       <div class="src" role="radiogroup" aria-label="Source des articles">
         <label><input type="radio" name="src" id="srcKnown" value="known">
@@ -212,7 +219,7 @@ details ul b{color:var(--ink);font-weight:600}
         <ul>
           <li>Un article Wikipédia est caché : chaque case noire est un mot, sa largeur suit le nombre de lettres. <b>Touchez une case</b> pour voir ce nombre.</li>
           <li>Tout est masqué au départ, y compris « le », « de » ou « un ». Proposez un mot : il apparaît partout dans le texte, pluriel et féminin compris. « le » ou « la » révèlent aussi « l' », « de » révèle « d' ». Majuscules et accents ne comptent pas.</li>
-          <li>Un mot de la même famille s'inscrit dans la case (« volcanique » pour « volcan »).</li>
+          <li>Si votre mot est proche par le sens d'un mot caché, il s'inscrit dans sa case, comme sur Pédantix : <span class="legend"><i style="background:var(--heat1)"></i><i style="background:var(--heat2)"></i><i style="background:var(--heat3)"></i></span> du plus lointain au plus proche. Chaque case garde le mot le plus proche proposé.</li><li>Un mot que le jeu ne connaît pas n'est pas compté.</li>
           <li>La partie est gagnée quand tous les mots du titre sont découverts, petits mots compris. Ensuite, passez à l'article suivant, autant de fois que vous voulez.</li>
         </ul>
       </details>
@@ -361,6 +368,45 @@ async function nextArticle(){
   if(offline || art.src==="local") feedback('<span class="warnline">Wikipédia est injoignable pour le moment : voici un article de secours. Réessayez « Article suivant » plus tard.</span>');
 }
 
+/* ---------- Proximité sémantique ---------- */
+let VEC=null;
+function vecStatus(html){ $("vstat").innerHTML=html; }
+async function loadVectors(){
+  try{
+    const r=await fetch("vecteurs.bin");
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const buf=await r.arrayBuffer();
+    const head=new Uint8Array(buf,0,4);
+    if(String.fromCharCode(...head)!=="CVEC") throw new Error("format");
+    const dv=new DataView(buf), n=dv.getUint32(4,true), dim=dv.getUint32(8,true), wl=dv.getUint32(12,true);
+    const words=new TextDecoder().decode(new Uint8Array(buf,16,wl)).split("\n");
+    const data=new Int8Array(buf,16+wl,n*dim);
+    const norms=new Float32Array(n);
+    for(let i=0;i<n;i++){ let s=0; const o=i*dim; for(let k=0;k<dim;k++){ const v=data[o+k]; s+=v*v; } norms[i]=Math.sqrt(s)||1; }
+    const idx=new Map(), nidx=new Map();
+    words.forEach((w,i)=>{ idx.set(w,i); const k=norm(w); if(!nidx.has(k)) nidx.set(k,i); });
+    VEC={n,dim,data,norms,idx,nidx};
+    vecStatus(`<b>Actif.</b> Les mots proches par le sens s'affichent dans les cases (${n.toLocaleString("fr-FR")} mots connus).`);
+  }catch(e){
+    VEC=null;
+    vecStatus(location.protocol==="file:"
+      ? "Indisponible en ouvrant le fichier directement : mettez le site en ligne (GitHub Pages) pour activer les mots proches. En attendant, seuls les mots de la même famille sont détectés."
+      : "Indisponible : le fichier <b>vecteurs.bin</b> doit se trouver à côté de index.html. En attendant, seuls les mots de la même famille sont détectés.");
+  }
+}
+function vecIndex(w){
+  if(!VEC) return -1;
+  const l=w.toLowerCase().replace(/’/g,"'");
+  if(VEC.idx.has(l)) return VEC.idx.get(l);
+  const k=norm(w); return VEC.nidx.has(k)?VEC.nidx.get(k):-1;
+}
+function tokVec(t){ if(t.vi===undefined) t.vi=vecIndex(t.w); return t.vi; }
+function cosine(i,j){
+  const d=VEC.data, D=VEC.dim, a=i*D, b=j*D; let s=0;
+  for(let k=0;k<D;k++) s+=d[a+k]*d[b+k];
+  return s/(VEC.norms[i]*VEC.norms[j]);
+}
+
 /* ---------- Partie ---------- */
 function mkWord(raw, title){ const n=norm(raw); return {w:raw, n, s:stem(n), fn:STOP.has(n), len:[...raw].length, title:!!title, el:null}; }
 function tokenize(text, title){
@@ -426,7 +472,8 @@ function build(){
   for(const t of ST.titleToks) $("title").append(nodeFor(t));
   for(const para of ST.paras){ const p=document.createElement("p"); for(const t of para) p.append(nodeFor(t)); $("body").append(p); }
 }
-const heat = s => s>=85?3:s>=65?2:1;
+const heat = s => s>=66?3:s>=54?2:1;
+const NEAR_MIN = 43;
 function render(){
   const lastN=ST.last, spot=ST.spot;
   for(const t of WORDS){
@@ -441,13 +488,13 @@ function render(){
       el.removeAttribute("title"); el.removeAttribute("tabindex"); el.removeAttribute("role"); el.removeAttribute("aria-label");
     }else{
       const nr=ST.near[t.n];
-      let c="h"+(nr?" near heat"+heat(nr.score):"")+(t.peek&&!nr?" peek":"");
+      let c="h"+(t.peek?" peek":nr?" near heat"+heat(nr.score):"");
       if(spot && nr && norm(nr.word)===spot) c+=" spot";
       el.className=c;
       el.style.setProperty("--len",t.len);
       el.dataset.len=t.len;
-      el.textContent=nr?nr.word:"";
-      el.title=nr?`« ${nr.word} » est de la même famille · ${t.len} lettres`:`${t.len} lettres`;
+      el.textContent=t.peek?String(t.len):nr?nr.word:"";
+      el.title=nr?`« ${nr.word} » est proche · ${t.len} lettres`:`${t.len} lettres`;
       el.setAttribute("role","button"); el.tabIndex=0;
       el.setAttribute("aria-label", nr?`mot caché de ${t.len} lettres, proche de ${nr.word}`:`mot caché de ${t.len} lettres`);
     }
@@ -468,7 +515,7 @@ function renderSide(){
     const w=document.createElement("span"); w.className="gw"; w.textContent=g.word;
     if(g.title){ const e=document.createElement("em"); e.textContent="titre"; w.append(e); }
     const nb=document.createElement("span");
-    if(g.near>0){ nb.className="gn heat2"; nb.textContent="~"+g.near; nb.title=plural(g.near,"mot de la même famille","mots de la même famille"); }
+    if(g.near>0){ nb.className="gn heat"+heat(g.best||50); nb.textContent="~"+g.near; nb.title=plural(g.near,"mot proche","mots proches"); }
     const c=document.createElement("span"); c.className="gc"+(g.count>0?" pos":""); c.textContent=g.count; c.title=plural(g.count,"occurrence");
     li.append(i,w,nb,c); ul.append(li);
   }
@@ -507,7 +554,7 @@ function feedback(html){ $("fb").innerHTML=html; }
 function guessLine(g){
   let s=`<b>« ${esc(g.word)} »</b> : `;
   s+=g.count>0?`<span class="hit">${plural(g.count,"occurrence")}</span>${g.title?", dont le titre":""}`:"absent";
-  if(g.near>0) s+=` · ${plural(g.near,"mot de la même famille","mots de la même famille")}`;
+  if(g.near>0) s+=` · ${plural(g.near,"mot proche","mots proches")}`;
   return s;
 }
 function submit(raw){
@@ -519,19 +566,27 @@ function submit(raw){
   const prev=ST.guesses.find(x=>x.n===g);
   if(prev){ ST.spot=g; render(); feedback(`Déjà proposé (n°${prev.i}). `+guessLine(prev)); scrollToSpot(); return; }
 
-  const entry={word, n:g, i:ST.guesses.length+1, count:0, near:0, title:false};
-  ST.guesses.push(entry);
+  const entry={word, n:g, i:ST.guesses.length+1, count:0, near:0, best:0, title:false};
   for(const t of WORDS) if(matches(t,g)){ entry.count++; if(t.title) entry.title=true; }
+  const gi = VEC && !isNum(g) ? vecIndex(word) : -1;
+  if(VEC && gi<0 && entry.count===0 && !isNum(g)){ feedback(`<b>« ${esc(word)} »</b> : mot inconnu, non compté. Vérifiez l'orthographe.`); return; }
+  ST.guesses.push(entry);
   ST.revN.add(g); ST.revS.add(stem(g)); if(ELIDE[g]) ST.revN.add(ELIDE[g]);
   ST.last=g; ST.spot=null;
 
-  if(!isNum(g)){
+  if(!isNum(g) && !STOP.has(g)){
     const seen=new Set();
     for(const t of WORDS){
       if(t.fn || isRev(t) || seen.has(t.n) || isNum(t.n)) continue;
       seen.add(t.n);
-      let k=0; const L=Math.min(t.n.length,g.length); while(k<L && t.n[k]===g[k]) k++;
-      if(k>=5 && k>=0.7*L){ const cur=ST.near[t.n]; if(!cur || cur.score<70){ ST.near[t.n]={word,score:70}; entry.near++; } }
+      let score=0;
+      const ti = gi>=0 ? tokVec(t) : -1;
+      if(gi>=0 && ti>=0) score=Math.round(cosine(gi,ti)*100);
+      else { let k=0; const L=Math.min(t.n.length,g.length); while(k<L && t.n[k]===g[k]) k++; if(k>=5 && k>=0.7*L) score=55; }
+      if(score>=NEAR_MIN && score<100){
+        const cur=ST.near[t.n];
+        if(!cur || score>cur.score){ ST.near[t.n]={word,score}; entry.near++; entry.best=Math.max(entry.best,score); }
+      }
     }
   }
 
@@ -558,7 +613,10 @@ $("form").addEventListener("submit",e=>{ e.preventDefault(); const v=$("guess").
 function peek(target){
   if(!ST) return false;
   const h=target.closest(".h"); if(!h || h.dataset.i===undefined) return false;
-  const t=WORDS[+h.dataset.i]; if(t && !ST.near[t.n]){ t.peek=!t.peek; render(); }
+  const t=WORDS[+h.dataset.i]; if(!t) return true;
+  t.peek=true; render();
+  clearTimeout(t.pt);
+  t.pt=setTimeout(()=>{ t.peek=false; if(ST && WORDS[t.el?.dataset.i]===t) render(); },3000);
   return true;
 }
 for(const id of ["body","title"]){
@@ -580,6 +638,7 @@ $(mode==="random"?"srcRandom":"srcKnown").checked=true;
 document.querySelectorAll('input[name="src"]').forEach(r=>r.addEventListener("change",e=>{ mode=e.target.value; lsSet("caviarde.mode",mode); }));
 
 /* ---------- Démarrage ---------- */
+loadVectors();
 if(restore(lsGet("caviarde.game",null))){
   if(ST.done) feedback("Partie terminée. Passez à l'article suivant quand vous voulez.");
   else{ const g=ST.guesses.find(x=>x.n===ST.last); feedback(g?"Partie reprise. Dernière proposition : "+guessLine(g):"Partie reprise."); }
