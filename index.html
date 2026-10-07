@@ -226,8 +226,11 @@ details ul b{color:var(--ink);font-weight:600}
 .lcell.typed{border-color:var(--ink-2)}
 .lcell.hint{color:color-mix(in srgb,var(--ink-2) 55%,transparent)}
 .lcell.ok,.lc.ok{background:var(--near3);border-color:var(--near3);color:#FFFFFF}
-.lcell.mid,.lc.mid{background:radial-gradient(circle,var(--near2) 0 60%,var(--pen) 62%);border-color:var(--pen);color:#15181B}
-.lcell.no,.lc.no{background:var(--pen);border-color:var(--pen);color:var(--pen-ink)}
+:root{--abs:#7D868D;--abs-ink:#FFFFFF}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){--abs:#3A4148;--abs-ink:#C9D0D5} }
+:root[data-theme="dark"]{--abs:#3A4148;--abs-ink:#C9D0D5}
+.lcell.mid,.lc.mid{background:radial-gradient(circle,var(--near2) 0 60%,var(--abs) 62%);border-color:var(--abs);color:#15181B}
+.lcell.no,.lc.no{background:var(--abs);border-color:var(--abs);color:var(--abs-ink)}
 .lcell.flip{animation:flip .35s ease both}
 @keyframes flip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
 .lrow.shake{animation:shake .4s}
@@ -241,7 +244,7 @@ details ul b{color:var(--ink);font-weight:600}
 .kb button.wide{flex:1.6 1 0;font-size:.9rem}
 .kb button.ok{background:var(--near3);color:#FFFFFF}
 .kb button.mid{background:var(--near2);color:#15181B}
-.kb button.no{background:var(--pen);color:var(--pen-ink);opacity:.55}
+.kb button.no{background:var(--abs);color:var(--abs-ink);opacity:.6}
 .kb button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
 .lstats{width:100%;max-width:34rem;margin-top:10px}
 .stats4{grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -1360,7 +1363,7 @@ const Lettres = {
       primary: st.daily?"Jouer en illimité":"Mot suivant",
       onPrimary: ()=>{ if(st.daily) switchMode("free"); else this.fresh(); },
       onShare: box=>{
-        const em={ok:"🟥",mid:"🟡",no:"🟦"};
+        const em={ok:"🟥",mid:"🟡",no:"⬛"};
         const grid=st.rows.map(r=>this.score(r,st.target).map(s=>em[s]).join("")).join("\n");
         const head=st.daily?`Lettres du jour n°${st.daily.n}`:"Lettres";
         shareText(`${head} : ${st.won?st.rows.length:"X"}/${MAXTRY}\n${grid}\n${location.origin+location.pathname}`, box);
