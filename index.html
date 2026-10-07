@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Caviardé</title>
+<meta name="description" content="Jeu façon Pédantix rejouable à l'infini : retrouvez le titre d'un vrai article Wikipédia caché, mot par mot.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Barlow+Semi+Condensed:wght@400;500;600&family=Barlow+Condensed:wght@700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+html{color-scheme:light}
+body{margin:0}
+[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+
+/* Layout: dossier caviardé — barre de saisie collante, article en colonne de lecture, propositions en marge droite (empilées sous l'article sur mobile) */
+:root{
+  --paper:#EEF1F0; --surface:#F8FAF9; --ink:#15181B; --ink-2:#59626A; --rule:#D3D9D7;
+  --bar:#1B1F23; --pen:#2343B0; --pen-ink:#FFFFFF; --hl:#FFE14D; --hl-ink:#15181B;
+  --heat1:#C5CFCC; --heat2:#F2C879; --heat3:#F08A4B; --heat-ink:#15181B; --ok:#1E7A4F;
+  --f-read:"Literata", Georgia, "Times New Roman", serif;
+  --f-ui:"Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-mark:"Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-num:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#101214; --surface:#171A1D; --ink:#E3E7EA; --ink-2:#8E979F; --rule:#262B30;
+  --bar:#363C43; --pen:#8EA6FF; --pen-ink:#0E1220; --hl:#7A6614; --hl-ink:#FFF6CC;
+  --heat1:#3A4148; --heat2:#7A5E22; --heat3:#A3532A; --heat-ink:#F2F4F5; --ok:#5CC597;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#101214; --surface:#171A1D; --ink:#E3E7EA; --ink-2:#8E979F; --rule:#262B30;
+  --bar:#363C43; --pen:#8EA6FF; --pen-ink:#0E1220; --hl:#7A6614; --hl-ink:#FFF6CC;
+  --heat1:#3A4148; --heat2:#7A5E22; --heat3:#A3532A; --heat-ink:#F2F4F5; --ok:#5CC597;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.45}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:20px}
+@media (max-width:480px){.wrap{padding-inline:16px}}
+
+/* En-tête */
+.top{border-bottom:1px solid var(--rule)}
+.top .wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:14px}
+.mark{font-family:var(--f-mark);font-weight:800;font-size:1.9rem;letter-spacing:.04em;line-height:1;margin:0}
+.mark .redact{background:var(--ink);color:var(--paper);padding:0 .08em;margin-left:.04em}
+.meta{font-family:var(--f-num);font-size:.78rem;color:var(--ink-2);letter-spacing:.02em}
+.top .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+
+.btn{font:600 .95rem/1 var(--f-ui);letter-spacing:.02em;border-radius:6px;padding:.62em 1em;cursor:pointer;border:1px solid var(--ink);background:transparent;color:var(--ink)}
+.btn:hover{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.btn.primary{background:var(--pen);border-color:var(--pen);color:var(--pen-ink)}
+.btn.primary:hover{background:color-mix(in srgb,var(--pen) 86%,var(--ink))}
+.btn.quiet{border-color:var(--rule);color:var(--ink-2)}
+.btn.warn{border-color:var(--heat3);color:var(--ink);background:color-mix(in srgb,var(--heat3) 18%,transparent)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn:focus-visible,input:focus-visible,.gl li:focus-visible,.h:focus-visible,summary:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
+
+/* Barre de saisie */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--rule)}
+.bar .wrap{padding-block:12px;display:grid;gap:6px}
+.guess{display:flex;gap:8px;max-width:680px}
+.guess input{flex:1;min-width:0;font:500 1.1rem var(--f-ui);padding:.55em .8em;border:1.5px solid var(--ink);border-radius:6px;background:var(--surface);color:var(--ink)}
+.guess input::placeholder{color:var(--ink-2)}
+.fb{font-size:.95rem;color:var(--ink-2);min-height:1.4em;max-width:680px}
+.fb b{color:var(--ink);font-weight:600}
+.fb .hit{color:var(--ok);font-weight:600}
+
+/* Grille principale */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 17.5rem;gap:48px;padding-block:28px 64px}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr);gap:32px}}
+
+article{min-width:0;max-width:68ch}
+.eyebrow{font-family:var(--f-num);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 10px}
+#title{font-family:var(--f-read);font-weight:600;font-size:clamp(1.7rem,4.5vw,2.4rem);line-height:1.25;margin:0 0 6px;text-wrap:balance}
+.from{font-family:var(--f-read);font-style:italic;font-size:.9rem;color:var(--ink-2);margin:0 0 22px;padding-bottom:14px;border-bottom:1px solid var(--rule)}
+#body{font-family:var(--f-read);font-size:1.06rem;line-height:1.85}
+#body p{margin:0 0 1.1em}
+
+/* Mots */
+.w{border-radius:3px;transition:background-color .6s}
+.w.fresh{background:var(--hl);color:var(--hl-ink);box-shadow:0 0 0 .12em var(--hl)}
+.w.late{color:var(--ink-2);text-decoration:underline dotted color-mix(in srgb,var(--ink-2) 60%,transparent);text-underline-offset:.2em}
+.w.spot,.h.spot{outline:2px solid var(--pen);outline-offset:1px}
+.h{display:inline-block;min-width:calc(var(--len) * .56em);height:1.2em;line-height:1.2em;vertical-align:-.22em;background:var(--bar);border-radius:3px;text-align:center;cursor:pointer;font-family:var(--f-ui);font-style:italic;font-weight:500;color:var(--heat-ink);padding:0 .12em;white-space:nowrap}
+.h.peek::after{content:attr(data-len);font:500 .66em/1 var(--f-num);font-style:normal;color:var(--paper);vertical-align:.15em}
+.h.near{padding:0 .3em}
+.h.heat1{background:var(--heat1)}
+.h.heat2{background:var(--heat2)}
+.h.heat3{background:var(--heat3)}
+
+/* Bandeau de fin */
+.banner{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:14px 16px;margin:0 0 22px;border:1.5px solid var(--ink);border-radius:8px;background:var(--surface)}
+.banner .msg{flex:1 1 16rem;min-width:0;font-size:1.05rem}
+.banner .msg strong{font-family:var(--f-read);font-weight:600}
+.banner .msg small{display:block;color:var(--ink-2);font-size:.88rem;margin-top:2px}
+.banner .btns{display:flex;gap:8px;flex-wrap:wrap}
+.gen{font-size:.92rem;color:var(--ink-2)}
+
+/* Marge */
+aside{min-width:0;display:grid;gap:28px;align-content:start}
+@media (min-width:861px){aside{position:sticky;top:calc(env(safe-area-inset-top,0px) + 96px);max-height:calc(100vh - 120px);overflow:auto;padding-right:4px}}
+.sec h2{font-family:var(--f-num);font-weight:500;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 10px;display:flex;justify-content:space-between}
+.gl{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule)}
+.gl li{display:grid;grid-template-columns:2.2rem minmax(0,1fr) auto auto;gap:8px;align-items:baseline;padding:6px 4px;border-bottom:1px solid var(--rule);cursor:pointer}
+.gl li:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.gl li.on{background:color-mix(in srgb,var(--pen) 12%,transparent)}
+.gl .gi{font:500 .75rem var(--f-num);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.gl .gw{font-size:1.02rem;overflow-wrap:anywhere}
+.gl .gw em{font-style:normal;font:500 .66rem var(--f-num);color:var(--pen);margin-left:6px;letter-spacing:.06em;text-transform:uppercase}
+.gl .gc{font:500 .85rem var(--f-num);font-variant-numeric:tabular-nums;color:var(--ink-2);text-align:right;min-width:1.6rem}
+.gl .gc.pos{color:var(--ok)}
+.gl .gn{font:500 .72rem var(--f-num);padding:1px 5px;border-radius:3px;color:var(--heat-ink)}
+.gl .gn.heat1{background:var(--heat1)} .gl .gn.heat2{background:var(--heat2)} .gl .gn.heat3{background:var(--heat3)}
+.gl .gn.wait{color:var(--ink-2);background:transparent;animation:blink 1.1s infinite}
+@keyframes blink{50%{opacity:.3}}
+.empty{color:var(--ink-2);font-size:.92rem;margin:10px 0 0}
+
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;margin:0}
+.stats div{display:grid;gap:1px}
+.stats dt{font-size:.8rem;color:var(--ink-2)}
+.stats dd{margin:0;font:500 1.15rem var(--f-num);font-variant-numeric:tabular-nums}
+
+.opt{display:flex;gap:10px;align-items:flex-start;font-size:.95rem;cursor:pointer}
+.opt input{margin-top:.25em;accent-color:var(--pen);width:1.05em;height:1.05em}
+.opt small{display:block;color:var(--ink-2);font-size:.84rem;margin-top:2px}
+details{font-size:.94rem}
+summary{cursor:pointer;font-weight:600}
+details ul{padding-left:1.1em;margin:8px 0 0;display:grid;gap:6px;color:var(--ink-2)}
+details ul b{color:var(--ink);font-weight:600}
+.legend{display:inline-flex;gap:4px;vertical-align:middle}
+.legend i{display:inline-block;width:1.4em;height:.8em;border-radius:2px}
+.note{font-size:.84rem;color:var(--ink-2)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.loading .h{animation:blink 1.2s infinite}
+.banner a{color:var(--pen);font-weight:600}
+.lic{font-size:.84rem;color:var(--ink-2)}
+.lic a{color:inherit}
+.src{display:grid;gap:8px}
+.src label{display:flex;gap:10px;align-items:flex-start;font-size:.95rem;cursor:pointer}
+.src input{margin-top:.25em;accent-color:var(--pen);width:1.05em;height:1.05em}
+.src small{display:block;color:var(--ink-2);font-size:.84rem;margin-top:2px}
+.warnline{color:var(--heat3);font-size:.9rem}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="mark" aria-label="Caviardé">CAVI<span class="redact">ARDÉ</span></div>
+    <span class="meta" id="meta">Chargement…</span>
+    <div class="actions">
+      <button class="btn quiet" id="skip" type="button">Abandonner</button>
+    </div>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap">
+    <form class="guess" id="form" autocomplete="off">
+      <label for="guess" hidden>Proposer un mot</label>
+      <input id="guess" name="guess" type="text" placeholder="Proposez un mot…" autocapitalize="off" spellcheck="false" enterkeyhint="send" maxlength="40">
+      <button class="btn primary" type="submit" id="go">Essayer</button>
+    </form>
+    <div class="fb" id="fb" aria-live="polite">Chargement d'un article Wikipédia…</div>
+  </div>
+</div>
+
+<main class="wrap grid">
+  <article>
+    <div id="banner" hidden></div>
+    <p class="eyebrow">Titre</p>
+    <h1 id="title"></h1>
+    <p class="from" id="from">Article Wikipédia</p>
+    <div id="body"></div>
+  </article>
+
+  <aside>
+    <section class="sec">
+      <h2><span>Propositions</span><span id="gcount">0</span></h2>
+      <ul class="gl" id="glist"></ul>
+      <p class="empty" id="gempty">Tout est caché au départ : commencez par les petits mots courants, « le », « de », « est », « une »…</p>
+    </section>
+
+    <section class="sec">
+      <h2><span>Articles</span></h2>
+      <div class="src" role="radiogroup" aria-label="Source des articles">
+        <label><input type="radio" name="src" id="srcKnown" value="known">
+          <span>Sujets connus<small>Une sélection de plusieurs centaines de grands sujets : lieux, personnages, sciences, sports…</small></span></label>
+        <label><input type="radio" name="src" id="srcRandom" value="random">
+          <span>Totalement aléatoire<small>N'importe quel article assez long de Wikipédia. Beaucoup plus difficile.</small></span></label>
+      </div>
+      <p class="note">Le choix s'applique à l'article suivant.</p>
+    </section>
+
+    <section class="sec">
+      <h2><span>Vos parties</span></h2>
+      <dl class="stats">
+        <div><dt>Parties</dt><dd id="sGames">0</dd></div>
+        <div><dt>Titres trouvés</dt><dd id="sWins">0</dd></div>
+        <div><dt>Coups en moyenne</dt><dd id="sAvg">–</dd></div>
+        <div><dt>Record</dt><dd id="sBest">–</dd></div>
+      </dl>
+    </section>
+
+    <section class="sec">
+      <details>
+        <summary>Comment jouer</summary>
+        <ul>
+          <li>Un article Wikipédia est caché : chaque case noire est un mot, sa largeur suit le nombre de lettres. <b>Touchez une case</b> pour voir ce nombre.</li>
+          <li>Tout est masqué au départ, y compris « le », « de » ou « un ». Proposez un mot : il apparaît partout dans le texte, pluriel et féminin compris. « le » ou « la » révèlent aussi « l' », « de » révèle « d' ». Majuscules et accents ne comptent pas.</li>
+          <li>Un mot de la même famille s'inscrit dans la case (« volcanique » pour « volcan »).</li>
+          <li>La partie est gagnée quand tous les mots du titre sont découverts, petits mots compris. Ensuite, passez à l'article suivant, autant de fois que vous voulez.</li>
+        </ul>
+      </details>
+    </section>
+    <p class="lic">Textes issus de <a href="https://fr.wikipedia.org" target="_blank" rel="noopener">Wikipédia</a>, sous licence <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.fr" target="_blank" rel="noopener">CC BY-SA 4.0</a>. Le lien vers l'article s'affiche en fin de partie.</p>
+  </aside>
+</main>
+
+<script>
+const ARTICLES = [
+{t:"Volcan", x:"Un volcan est une structure géologique qui résulte de la montée d'un magma puis de son éruption à la surface de la Terre. Lorsqu'il atteint la surface, le magma prend le nom de lave. Les volcans se forment le plus souvent aux limites des plaques tectoniques, notamment le long de la ceinture de feu du Pacifique, mais aussi au-dessus de points chauds, comme à Hawaï ou à La Réunion.\n\nOn distingue classiquement les volcans effusifs, aux coulées de lave fluide, et les volcans explosifs, qui projettent des cendres, des bombes et des nuées ardentes. L'éruption du Vésuve en 79 détruisit Pompéi et Herculanum. La science qui étudie les volcans est la volcanologie. En France métropolitaine, la chaîne des Puys, en Auvergne, rassemble environ quatre-vingts volcans endormis."},
+{t:"Photosynthèse", x:"La photosynthèse est le processus biologique par lequel les plantes, les algues et certaines bactéries convertissent l'énergie lumineuse en énergie chimique. Elle se déroule principalement dans les chloroplastes, des organites contenant un pigment vert, la chlorophylle, qui absorbe la lumière.\n\nAu cours de la photosynthèse, le dioxyde de carbone de l'air et l'eau puisée par les racines sont transformés en glucose, tandis que du dioxygène est rejeté dans l'atmosphère. On distingue une phase dépendante de la lumière, qui se déroule dans les thylakoïdes, et une phase indépendante, le cycle de Calvin, qui fixe le carbone. La photosynthèse est à l'origine de la quasi-totalité de l'oxygène atmosphérique et constitue la base de la plupart des chaînes alimentaires sur Terre."},
+{t:"Tour Eiffel", x:"La tour Eiffel est une tour de fer puddlé de 330 mètres de hauteur située à Paris, à l'extrémité nord-ouest du parc du Champ-de-Mars, en bordure de la Seine. Construite par l'entreprise de Gustave Eiffel pour l'Exposition universelle de 1889, qui célébrait le centenaire de la Révolution française, elle devait initialement être démontée au bout de vingt ans.\n\nCritiquée par de nombreux artistes lors de sa construction, la tour doit en partie sa survie à son utilité pour les expériences de télégraphie sans fil. Elle fut la plus haute construction du monde jusqu'en 1930. Surnommée la « Dame de fer », elle est devenue le symbole de Paris et de la France, et accueille chaque année plusieurs millions de visiteurs."},
+{t:"Pénicilline", x:"La pénicilline est un antibiotique de la famille des bêta-lactamines, produit naturellement par des moisissures du genre Penicillium. Sa découverte est attribuée au médecin écossais Alexander Fleming, qui observa en 1928 qu'une moisissure ayant contaminé une boîte de culture empêchait la croissance de staphylocoques.\n\nIl fallut attendre la fin des années 1930 pour que Howard Florey et Ernst Chain parviennent à purifier la substance et à démontrer son efficacité thérapeutique. Produite en masse pendant la Seconde Guerre mondiale, la pénicilline sauva un très grand nombre de blessés. Les trois chercheurs reçurent le prix Nobel de physiologie ou médecine en 1945. La pénicilline agit en bloquant la synthèse de la paroi des bactéries ; son usage intensif a toutefois favorisé l'apparition de résistances."},
+{t:"Jazz", x:"Le jazz est un genre musical né aux États-Unis à la fin du XIXe siècle et au début du XXe siècle, au sein des communautés afro-américaines du sud du pays, en particulier à La Nouvelle-Orléans. Il puise ses racines dans le blues, le ragtime, les chants de travail et les musiques européennes.\n\nLe jazz se caractérise par l'importance de l'improvisation, le swing et un usage expressif des instruments, notamment la trompette, le saxophone, le piano et la contrebasse. Au fil du siècle, il a donné naissance à de nombreux courants : le swing des grands orchestres, le bebop, le cool, le free jazz ou encore le jazz fusion. Louis Armstrong, Duke Ellington, Charlie Parker, Miles Davis et John Coltrane comptent parmi ses figures majeures."},
+{t:"Wolfgang Amadeus Mozart", x:"Wolfgang Amadeus Mozart, né le 27 janvier 1756 à Salzbourg et mort le 5 décembre 1791 à Vienne, est un compositeur autrichien de la période classique. Enfant prodige, il se produit dès l'âge de six ans devant les cours d'Europe, accompagné de sa sœur et de son père Leopold, lui-même musicien.\n\nMozart a abordé tous les genres de son époque et laissé plus de six cents œuvres, parmi lesquelles des symphonies, des concertos pour piano, de la musique de chambre et des opéras comme Les Noces de Figaro, Don Giovanni et La Flûte enchantée. Mort à trente-cinq ans, il laisse inachevé son Requiem. Son œuvre, d'une grande richesse mélodique, est considérée comme l'un des sommets de la musique occidentale."},
+{t:"Lune", x:"La Lune est l'unique satellite naturel permanent de la Terre. Elle orbite à une distance moyenne d'environ 384 000 kilomètres et son diamètre représente un peu plus du quart de celui de la Terre. Elle présente toujours la même face à notre planète, car sa période de rotation est égale à sa période de révolution, soit environ vingt-sept jours.\n\nLa Lune ne produit pas de lumière : elle réfléchit celle du Soleil, ce qui explique ses phases, de la nouvelle lune à la pleine lune. Son attraction gravitationnelle est la principale cause des marées. Sa surface est couverte de cratères d'impact et de vastes plaines sombres appelées mers. En juillet 1969, lors de la mission Apollo 11, Neil Armstrong devint le premier homme à marcher sur la Lune."},
+{t:"Chocolat", x:"Le chocolat est un aliment obtenu à partir des fèves du cacaoyer, un arbre originaire d'Amérique tropicale. Après récolte, les fèves sont fermentées, séchées, torréfiées puis broyées pour obtenir une pâte de cacao, à partir de laquelle on extrait le beurre de cacao.\n\nLes Olmèques, puis les Mayas et les Aztèques, consommaient le cacao sous forme de boisson amère et épicée ; les fèves servaient même de monnaie. Introduit en Europe par les Espagnols au XVIe siècle, le chocolat s'est d'abord bu chaud avant que l'industrie du XIXe siècle ne mette au point la tablette. On distingue aujourd'hui le chocolat noir, le chocolat au lait et le chocolat blanc, ce dernier ne contenant pas de pâte de cacao. La Côte d'Ivoire est le premier producteur mondial de cacao."},
+{t:"Révolution française", x:"La Révolution française est la période de bouleversements politiques et sociaux qui a touché la France entre 1789 et 1799. Elle débute avec la réunion des états généraux et la prise de la Bastille le 14 juillet 1789, puis l'abolition des privilèges dans la nuit du 4 août.\n\nLa Déclaration des droits de l'homme et du citoyen, adoptée en août 1789, proclame la liberté et l'égalité des citoyens devant la loi. La monarchie absolue cède la place à une monarchie constitutionnelle, puis à la Première République, proclamée en septembre 1792. Le roi Louis XVI est exécuté en janvier 1793. La période de la Terreur, marquée par de nombreuses exécutions, prend fin avec la chute de Robespierre en 1794. Le coup d'État de Napoléon Bonaparte, en novembre 1799, clôt traditionnellement la période révolutionnaire."},
+{t:"Échecs", x:"Les échecs sont un jeu de stratégie opposant deux joueurs sur un plateau de soixante-quatre cases alternativement claires et sombres, appelé échiquier. Chaque joueur dispose de seize pièces : un roi, une dame, deux tours, deux fous, deux cavaliers et huit pions, qui se déplacent chacun selon des règles propres.\n\nLe but du jeu est de mettre le roi adverse en échec et mat, c'est-à-dire de le menacer sans qu'il puisse s'y soustraire. Probablement issus d'un jeu indien, le chaturanga, les échecs se sont diffusés en Perse puis dans le monde arabe avant d'atteindre l'Europe médiévale. Les règles modernes se fixent à la fin du XVe siècle. Depuis la victoire de l'ordinateur Deep Blue sur Garry Kasparov en 1997, les programmes informatiques surpassent les meilleurs joueurs humains."},
+{t:"Baleine bleue", x:"La baleine bleue, ou rorqual bleu, est un mammifère marin de la famille des Balaenopteridae. Pouvant dépasser trente mètres de longueur et peser plus de cent cinquante tonnes, c'est le plus grand animal connu ayant jamais vécu sur Terre, dinosaures compris.\n\nMalgré sa taille, la baleine bleue se nourrit presque exclusivement de krill, de petits crustacés qu'elle filtre grâce à ses fanons après avoir englouti d'énormes volumes d'eau. Un adulte peut en consommer plusieurs tonnes par jour. Présente dans tous les océans, elle émet des sons très graves qui portent sur des centaines de kilomètres. Chassée intensivement au XXe siècle, l'espèce a frôlé l'extinction avant d'être protégée en 1966 ; elle reste aujourd'hui classée en danger."},
+{t:"Internet", x:"Internet est le réseau informatique mondial qui relie entre eux des millions de réseaux publics et privés grâce à un ensemble de protocoles de communication communs, notamment TCP/IP. Il permet l'échange de données entre ordinateurs, téléphones et autres appareils connectés.\n\nSes origines remontent à ARPANET, un réseau expérimental financé par l'armée américaine et mis en service en 1969 entre plusieurs universités. Le terme Internet se répand dans les années 1980, avec l'adoption généralisée de TCP/IP en 1983. Au début des années 1990, l'invention du World Wide Web par Tim Berners-Lee au CERN rend le réseau accessible au grand public grâce aux pages reliées par des liens hypertextes. Internet sert aujourd'hui de support au courrier électronique, à la messagerie instantanée, aux réseaux sociaux, à la vidéo en ligne et au commerce électronique."},
+{t:"Pyramide de Khéops", x:"La pyramide de Khéops, ou grande pyramide de Gizeh, est un monument funéraire construit sous le règne du pharaon Khéops, de la IVe dynastie, vers 2560 avant notre ère. Située sur le plateau de Gizeh, près du Caire, en Égypte, elle est la plus grande des trois pyramides du site, aux côtés de celles de Khéphren et de Mykérinos.\n\nHaute à l'origine d'environ 146 mètres, elle est restée la construction humaine la plus haute du monde pendant près de quatre mille ans. Elle est constituée d'environ deux millions de blocs de calcaire et de granit. Les techniques employées pour sa construction font encore l'objet de débats parmi les égyptologues. Elle est la seule des sept merveilles du monde antique encore debout."},
+{t:"Bicyclette", x:"La bicyclette, couramment appelée vélo, est un véhicule à deux roues alignées, mû par la force musculaire de son conducteur grâce à un système de pédales, d'un pédalier et d'une chaîne qui entraîne la roue arrière.\n\nSon ancêtre est la draisienne, inventée en 1817 par l'Allemand Karl Drais, que l'on faisait avancer en poussant le sol avec les pieds. Les pédales apparaissent dans les années 1860, d'abord fixées sur la roue avant, avant que la bicyclette dite de sécurité, avec transmission par chaîne, ne s'impose à la fin du XIXe siècle. L'invention du pneumatique par Dunlop améliore ensuite nettement le confort. La bicyclette est aujourd'hui utilisée pour les déplacements quotidiens, les loisirs et la compétition, notamment lors du Tour de France, créé en 1903."},
+{t:"Marie Curie", x:"Marie Curie, née Maria Skłodowska le 7 novembre 1867 à Varsovie et morte le 4 juillet 1934 à Passy, en Haute-Savoie, est une physicienne et chimiste polonaise naturalisée française. Installée à Paris pour ses études, elle y épouse le physicien Pierre Curie, avec qui elle mène des recherches sur les rayonnements.\n\nEn 1898, le couple découvre deux nouveaux éléments chimiques, le polonium, nommé en hommage à son pays natal, et le radium. Marie Curie forge le terme de radioactivité. Elle est la première femme à recevoir un prix Nobel, celui de physique en 1903, partagé avec Pierre Curie et Henri Becquerel, puis obtient seule le prix Nobel de chimie en 1911. Elle reste à ce jour la seule personne récompensée dans deux disciplines scientifiques différentes. Ses cendres reposent au Panthéon depuis 1995."},
+{t:"ADN", x:"L'acide désoxyribonucléique, ou ADN, est une macromolécule présente dans toutes les cellules et chez de nombreux virus, qui contient l'information génétique nécessaire au développement et au fonctionnement des êtres vivants. Chez les eucaryotes, l'ADN se trouve principalement dans le noyau, mais aussi dans les mitochondries et les chloroplastes.\n\nL'ADN est formé de deux brins enroulés l'un autour de l'autre en double hélice, une structure décrite en 1953 par James Watson et Francis Crick à partir notamment des travaux de Rosalind Franklin. Chaque brin est une chaîne de nucléotides, qui portent l'une des quatre bases azotées : adénine, thymine, guanine et cytosine. Les bases s'apparient deux à deux, ce qui permet la réplication de la molécule lors de la division cellulaire. Les segments d'ADN qui codent des protéines sont appelés gènes."},
+{t:"Rugby", x:"Le rugby est un sport collectif de contact qui oppose deux équipes se disputant un ballon ovale, que les joueurs peuvent porter à la main, passer vers l'arrière ou botter. L'objectif est de marquer des points en aplatissant le ballon dans l'en-but adverse, ce qu'on appelle un essai, ou en le faisant passer entre les poteaux d'un coup de pied.\n\nSelon la légende, le rugby serait né en 1823 dans la ville anglaise de Rugby, lorsqu'un élève, William Webb Ellis, aurait pris le ballon à la main lors d'une partie de football. Le jeu s'est ensuite divisé en deux grandes variantes, le rugby à XV et le rugby à XIII. La Coupe du monde de rugby à XV est organisée tous les quatre ans depuis 1987. En France, le rugby est historiquement très implanté dans le Sud-Ouest."},
+{t:"Café", x:"Le café est une boisson obtenue par infusion ou percolation des graines torréfiées et moulues du caféier, un arbuste tropical. Les deux espèces les plus cultivées sont l'arabica, réputé pour ses arômes, et le robusta, plus riche en caféine et plus amer.\n\nOriginaire d'Éthiopie, le caféier est cultivé dès le XVe siècle au Yémen, d'où la boisson se diffuse dans le monde musulman puis en Europe au XVIIe siècle. Les premiers établissements où l'on sert du café, également appelés cafés, deviennent des lieux de sociabilité et de débat. Le Brésil est aujourd'hui le premier producteur mondial, devant le Viêt Nam. La caféine qu'il contient agit comme un stimulant du système nerveux central. Le café se consomme sous de nombreuses formes : expresso, filtre, cappuccino ou café turc."},
+{t:"Tsunami", x:"Un tsunami est une série de vagues de très grande longueur d'onde provoquée par le déplacement brutal d'un important volume d'eau, le plus souvent à la suite d'un séisme sous-marin. Il peut aussi résulter d'un glissement de terrain, d'une éruption volcanique ou, plus rarement, de la chute d'une météorite.\n\nEn haute mer, un tsunami passe presque inaperçu : sa hauteur ne dépasse souvent pas un mètre, mais il se propage à plusieurs centaines de kilomètres par heure. À l'approche des côtes, sa vitesse diminue et sa hauteur augmente fortement, ce qui peut provoquer des inondations dévastatrices. Le mot tsunami vient du japonais et signifie « vague du port ». Le tsunami de décembre 2004 dans l'océan Indien et celui de mars 2011 au Japon, qui endommagea la centrale de Fukushima, comptent parmi les plus meurtriers de l'histoire récente."},
+{t:"Abeille", x:"Les abeilles sont des insectes volants de l'ordre des hyménoptères, qui se nourrissent du nectar et du pollen des fleurs. On en recense environ vingt mille espèces dans le monde, dont la plupart vivent de façon solitaire. L'espèce la plus connue est l'abeille domestique, élevée par l'homme pour son miel et sa cire.\n\nChez l'abeille domestique, la colonie est organisée autour d'une reine, seule femelle fertile, de milliers d'ouvrières et de quelques centaines de faux bourdons. Les ouvrières bâtissent les rayons de cire, nourrissent les larves et récoltent le nectar, qu'elles transforment en miel. Elles indiquent la position des sources de nourriture par une danse. En butinant, les abeilles assurent la pollinisation d'une grande partie des plantes à fleurs et des cultures. L'élevage des abeilles s'appelle l'apiculture."},
+{t:"Titanic", x:"Le Titanic est un paquebot transatlantique britannique de la compagnie White Star Line, construit aux chantiers Harland and Wolff de Belfast. Lors de sa mise en service, il était le plus grand navire du monde et était réputé insubmersible grâce à ses compartiments étanches.\n\nParti de Southampton le 10 avril 1912 pour son voyage inaugural à destination de New York, avec une escale à Cherbourg puis une autre en Irlande, le Titanic heurte un iceberg dans la nuit du 14 au 15 avril et sombre en moins de trois heures dans l'Atlantique Nord. Environ mille cinq cents personnes périssent, faute notamment de canots de sauvetage en nombre suffisant. La catastrophe entraîne une profonde réforme des règles de sécurité maritime. L'épave est localisée en 1985 par près de quatre mille mètres de fond."},
+{t:"Léonard de Vinci", x:"Léonard de Vinci, né le 15 avril 1452 à Vinci, en Toscane, et mort le 2 mai 1519 à Amboise, est un peintre, ingénieur, inventeur et savant italien, figure emblématique de la Renaissance. Formé à Florence dans l'atelier du sculpteur et peintre Verrocchio, il travaille ensuite pour le duc de Milan, Ludovic Sforza.\n\nIl est l'auteur de quelques-unes des œuvres les plus célèbres de la peinture occidentale, comme La Joconde, conservée au musée du Louvre, et La Cène, peinte sur un mur d'un couvent milanais. Ses carnets, remplis de dessins et de notes en écriture inversée, témoignent de recherches dans des domaines très variés : anatomie, mécanique, hydraulique, optique ou vol des oiseaux. Invité par François Ier, il passe les dernières années de sa vie au manoir du Clos Lucé, près d'Amboise."},
+{t:"Sahara", x:"Le Sahara est le plus grand désert chaud du monde. Il s'étend sur plus de huit millions de kilomètres carrés dans le nord de l'Afrique, de l'océan Atlantique à la mer Rouge, et couvre une dizaine de pays, dont l'Algérie, la Libye, l'Égypte, le Mali et le Niger.\n\nContrairement à une idée répandue, les dunes de sable, appelées ergs, n'en occupent qu'une partie ; le reste est constitué de plaines caillouteuses, les regs, de plateaux rocheux, les hamadas, et de massifs montagneux comme le Hoggar et le Tibesti. Les températures peuvent y dépasser cinquante degrés le jour et chuter fortement la nuit. Il y a quelques milliers d'années, le Sahara était une région verdoyante, comme l'attestent les peintures rupestres du Tassili n'Ajjer. Les Touaregs y pratiquent traditionnellement le nomadisme."},
+{t:"Imprimerie", x:"L'imprimerie est l'ensemble des techniques permettant la reproduction en grande quantité de textes et d'images sur un support, généralement le papier. L'impression à l'aide de planches de bois gravées est pratiquée en Chine dès le VIIe siècle, et les caractères mobiles y apparaissent au XIe siècle, mais c'est en Europe que l'imprimerie connaît un essor décisif.\n\nVers 1450, à Mayence, Johannes Gutenberg met au point un procédé combinant des caractères mobiles en métal, une encre grasse et une presse inspirée des pressoirs à vin. La Bible de Gutenberg, achevée vers 1455, est l'un des premiers grands livres imprimés en Europe. L'imprimerie se diffuse rapidement : à la fin du XVe siècle, plusieurs centaines de villes possèdent un atelier. Elle joue un rôle majeur dans la diffusion de la Renaissance et de la Réforme protestante."},
+{t:"Pizza", x:"La pizza est une préparation culinaire d'origine italienne, composée d'une pâte à pain aplatie, généralement recouverte de sauce tomate et de fromage, puis cuite au four. Elle est particulièrement associée à la ville de Naples, où elle se développe comme plat populaire au XVIIIe siècle.\n\nSelon une tradition souvent racontée, la pizza Margherita, garnie de tomate, de mozzarella et de basilic aux couleurs du drapeau italien, aurait été créée en 1889 en l'honneur de la reine Marguerite de Savoie. Portée par l'émigration italienne, la pizza connaît un grand succès aux États-Unis au XXe siècle avant de se répandre dans le monde entier. Elle se décline en de nombreuses variantes, cuites au feu de bois ou au four électrique. L'art du pizzaïolo napolitain est inscrit au patrimoine culturel immatériel de l'UNESCO depuis 2017."},
+{t:"Guitare", x:"La guitare est un instrument de musique à cordes pincées, composé d'une caisse de résonance, d'un manche muni de frettes et, le plus souvent, de six cordes. Le musicien fait vibrer les cordes avec les doigts ou à l'aide d'un médiator, tandis que l'autre main appuie sur le manche pour former les notes et les accords.\n\nDescendante de divers instruments à cordes médiévaux, la guitare classique prend sa forme moderne en Espagne au XIXe siècle, notamment grâce au luthier Antonio de Torres. Au XXe siècle apparaît la guitare électrique, dont le son est capté par des micros puis amplifié ; elle devient l'instrument emblématique du rock. La guitare occupe une place centrale dans de nombreux genres, du flamenco au blues, en passant par la musique folk, le jazz et la variété."},
+{t:"Jeux olympiques", x:"Les Jeux olympiques sont un événement sportif international majeur, regroupant des sports d'été et d'hiver, auquel participent des milliers d'athlètes du monde entier. Ils sont organisés tous les quatre ans, les Jeux d'été et les Jeux d'hiver alternant tous les deux ans.\n\nInspirés des jeux antiques célébrés à Olympie, en Grèce, en l'honneur de Zeus, les Jeux olympiques modernes sont créés à l'initiative du baron Pierre de Coubertin, qui fonde le Comité international olympique en 1894. Les premiers Jeux de l'ère moderne se tiennent à Athènes en 1896. Le symbole olympique est composé de cinq anneaux entrelacés représentant l'union des continents. Paris a accueilli les Jeux d'été à trois reprises, en 1900, en 1924 et en 2024. La flamme olympique est allumée à Olympie avant chaque édition."},
+{t:"Dinosaure", x:"Les dinosaures sont un groupe de reptiles apparus il y a environ 230 millions d'années, au cours du Trias. Ils ont dominé les écosystèmes terrestres pendant le Jurassique et le Crétacé, sous des formes très variées, allant de petits prédateurs de la taille d'une poule à d'immenses herbivores à long cou comme les sauropodes.\n\nLa plupart des dinosaures ont disparu il y a environ 66 millions d'années, lors d'une extinction massive probablement provoquée par l'impact d'un astéroïde dans la péninsule du Yucatán, au Mexique, combiné à un intense volcanisme. Seule une lignée a survécu : les oiseaux, que les scientifiques considèrent aujourd'hui comme des dinosaures à part entière. Le terme dinosaure, qui signifie « lézard terrible », a été forgé en 1842 par le paléontologue britannique Richard Owen. Le tyrannosaure et le tricératops comptent parmi les espèces les plus célèbres."},
+{t:"Trou noir", x:"Un trou noir est une région de l'espace où la gravité est si intense que rien, pas même la lumière, ne peut s'en échapper. Sa frontière, appelée horizon des événements, marque la limite au-delà de laquelle tout retour est impossible. L'existence des trous noirs est une prédiction de la théorie de la relativité générale d'Albert Einstein.\n\nLes trous noirs stellaires se forment lors de l'effondrement d'étoiles massives en fin de vie. Il existe aussi des trous noirs supermassifs, de plusieurs millions à plusieurs milliards de masses solaires, au centre de la plupart des galaxies, dont la nôtre, la Voie lactée. Invisibles par nature, les trous noirs sont détectés grâce à leurs effets sur la matière et la lumière environnantes. En 2015, les ondes gravitationnelles émises par la fusion de deux trous noirs ont été détectées pour la première fois, et en 2019 la première image de l'ombre d'un trou noir a été publiée."},
+{t:"Vaccin", x:"Un vaccin est une préparation biologique destinée à provoquer une réponse immunitaire protectrice contre une maladie infectieuse. Il contient généralement un agent pathogène atténué ou inactivé, une partie de cet agent, ou les instructions génétiques permettant à l'organisme d'en fabriquer un fragment.\n\nLe premier vaccin est mis au point en 1796 par le médecin anglais Edward Jenner, qui inocule à un enfant la vaccine, une maladie bovine bénigne, afin de le protéger de la variole. Le mot vaccin dérive d'ailleurs du latin vacca, qui signifie vache. Au XIXe siècle, Louis Pasteur développe des vaccins contre le choléra des poules et la rage. La vaccination de masse a permis l'éradication de la variole, déclarée en 1980, et le recul de nombreuses maladies comme la poliomyélite, la diphtérie ou la rougeole."},
+{t:"Notre-Dame de Paris", x:"La cathédrale Notre-Dame de Paris est une cathédrale catholique située sur l'île de la Cité, au cœur de Paris. Sa construction, entreprise en 1163 sous l'impulsion de l'évêque Maurice de Sully, s'étend sur près de deux siècles. Elle est l'un des monuments les plus représentatifs de l'architecture gothique, avec ses arcs-boutants, ses rosaces et sa façade occidentale encadrée de deux tours.\n\nFortement dégradée pendant la Révolution, la cathédrale est restaurée au XIXe siècle par l'architecte Eugène Viollet-le-Duc, qui ajoute notamment une flèche. Le roman de Victor Hugo, publié en 1831, contribue à éveiller l'intérêt du public pour sa sauvegarde. Le 15 avril 2019, un incendie détruit la charpente et provoque l'effondrement de la flèche. Après plus de cinq ans de travaux, la cathédrale rouvre ses portes en décembre 2024."},
+{t:"Mont Blanc", x:"Le mont Blanc est le plus haut sommet des Alpes et d'Europe occidentale, culminant à environ 4 805 mètres d'altitude. Situé dans le massif du Mont-Blanc, à la frontière entre la France et l'Italie, il domine la vallée de Chamonix d'un côté et celle de Courmayeur de l'autre.\n\nSa première ascension est réalisée le 8 août 1786 par Jacques Balmat et le médecin Michel Paccard, une date souvent considérée comme la naissance de l'alpinisme. Le sommet est recouvert d'une calotte de glace et de neige dont l'épaisseur varie selon les années, si bien que son altitude est mesurée régulièrement. Le tunnel du Mont-Blanc, ouvert en 1965, relie Chamonix à Courmayeur sous le massif. Chaque été, des milliers d'alpinistes tentent l'ascension par la voie normale."},
+{t:"Champagne", x:"Le champagne est un vin effervescent français produit dans la région viticole de Champagne, dans le nord-est de la France. Il bénéficie d'une appellation d'origine contrôlée qui encadre strictement son aire de production, ses cépages et ses méthodes d'élaboration.\n\nIl est élaboré principalement à partir de trois cépages : le chardonnay, le pinot noir et le pinot meunier. Sa particularité tient à la prise de mousse, une seconde fermentation qui se déroule en bouteille et produit les bulles. La légende attribue souvent l'invention du champagne au moine bénédictin Dom Pérignon, à la fin du XVIIe siècle, mais la méthode s'est en réalité développée progressivement. Reims et Épernay abritent les sièges de nombreuses maisons de champagne, dont les caves creusées dans la craie sont inscrites au patrimoine mondial de l'UNESCO depuis 2015."},
+{t:"Football", x:"Le football est un sport collectif opposant deux équipes de onze joueurs qui cherchent à faire entrer un ballon dans le but adverse sans utiliser les mains, à l'exception du gardien de but dans sa surface de réparation. Un match dure deux périodes de quarante-cinq minutes.\n\nDes jeux de balle au pied existent depuis l'Antiquité, mais les règles du football moderne sont codifiées en Angleterre en 1863, lors de la fondation de la Football Association. La Fédération internationale de football association, ou FIFA, est créée à Paris en 1904. Sport le plus populaire au monde, le football compte des centaines de millions de pratiquants. Sa compétition la plus prestigieuse, la Coupe du monde, a lieu tous les quatre ans depuis 1930. La France l'a remportée en 1998 et en 2018."},
+{t:"Baguette", x:"La baguette est un pain de forme allongée, à la croûte dorée et croustillante et à la mie alvéolée, emblématique de la boulangerie française. Elle est fabriquée à partir de farine de blé, d'eau, de sel et de levure ou de levain, et mesure le plus souvent entre cinquante et soixante-dix centimètres.\n\nL'origine précise de la baguette reste débattue. Les pains longs se répandent à Paris au XIXe siècle, mais le nom de baguette ne s'impose qu'au cours de la première moitié du XXe siècle. En France, il s'en vend plusieurs millions chaque jour, et la plupart des boulangeries en proposent différentes variantes, comme la baguette de tradition, encadrée par un décret de 1993 qui interdit l'usage d'additifs. En 2022, le savoir-faire artisanal et la culture de la baguette ont été inscrits au patrimoine culturel immatériel de l'UNESCO."},
+{t:"Grande Muraille", x:"La Grande Muraille est un ensemble de fortifications construites en Chine du Nord au fil de plus de deux millénaires pour protéger l'empire des incursions des peuples nomades des steppes. Les premiers murs sont élevés par différents royaumes dès le VIIe siècle avant notre ère, puis reliés sous le règne de Qin Shi Huang, le premier empereur de Chine, au IIIe siècle avant notre ère.\n\nL'essentiel des tronçons visibles aujourd'hui date de la dynastie Ming, entre le XIVe et le XVIIe siècle. Faite de terre damée, de pierre et de briques, la muraille est jalonnée de tours de guet et de garnisons. En comptant toutes ses branches, sa longueur totale a été estimée en 2012 à plus de vingt mille kilomètres. Contrairement à une légende tenace, elle n'est pas visible à l'œil nu depuis la Lune. Elle est inscrite au patrimoine mondial de l'UNESCO depuis 1987."},
+{t:"Aspirine", x:"L'aspirine est le nom commercial, devenu courant, de l'acide acétylsalicylique, un médicament utilisé pour soulager la douleur, faire baisser la fièvre et réduire l'inflammation. À faible dose, il est également prescrit pour prévenir la formation de caillots sanguins, grâce à son effet antiagrégant plaquettaire.\n\nDepuis l'Antiquité, des préparations à base d'écorce de saule étaient employées contre la fièvre et les douleurs ; leur principe actif, la salicine, est isolé au XIXe siècle. En 1897, le chimiste Felix Hoffmann, de l'entreprise allemande Bayer, synthétise une forme d'acide acétylsalicylique pure et stable, commercialisée en 1899 sous le nom d'Aspirine. Son mécanisme d'action, l'inhibition des enzymes cyclooxygénases, n'est élucidé qu'en 1971 par John Vane. L'aspirine est l'un des médicaments les plus consommés au monde."},
+{t:"Manchot empereur", x:"Le manchot empereur est la plus grande et la plus lourde des espèces de manchots. Il mesure jusqu'à environ 1,20 mètre et peut peser plus de trente kilogrammes. Endémique de l'Antarctique, il vit sur la banquise et chasse en mer des poissons, du krill et des calmars, pouvant plonger à plus de cinq cents mètres de profondeur.\n\nLe manchot empereur est connu pour son cycle de reproduction exceptionnel, qui se déroule en plein hiver austral. La femelle pond un œuf unique puis repart en mer se nourrir, tandis que le mâle le couve sur ses pattes, sous un repli de peau, pendant environ deux mois, en jeûnant par des températures pouvant descendre sous les moins quarante degrés. Les mâles se serrent alors en groupes compacts pour se protéger du froid. Le réchauffement climatique, qui menace la banquise, constitue un danger majeur pour l'espèce."},
+{t:"Arc-en-ciel", x:"Un arc-en-ciel est un phénomène optique et météorologique qui se manifeste par l'apparition dans le ciel d'un arc lumineux décomposé en plusieurs couleurs. Il se forme lorsque la lumière du Soleil traverse des gouttes de pluie : elle y est réfractée, réfléchie puis dispersée, chaque longueur d'onde étant déviée selon un angle légèrement différent.\n\nPour observer un arc-en-ciel, il faut avoir le Soleil dans le dos et la pluie devant soi. L'arc principal apparaît à environ 42 degrés de la direction opposée au Soleil, avec le rouge à l'extérieur et le violet à l'intérieur. Un second arc, plus pâle et aux couleurs inversées, est parfois visible au-dessus du premier. Par convention, on distingue sept couleurs, une division popularisée par Isaac Newton, bien que le spectre soit en réalité continu. René Descartes avait fourni dès 1637 une explication géométrique du phénomène."},
+{t:"Sushi", x:"Le sushi est un plat traditionnel japonais composé d'un riz vinaigré, associé à d'autres ingrédients comme du poisson cru, des fruits de mer, des légumes ou de l'omelette. Il en existe de nombreuses variantes : les nigiri, petites bouchées de riz surmontées d'une tranche de poisson, les maki, roulés dans une feuille d'algue nori, ou encore les temaki, en forme de cône.\n\nLe sushi trouve son origine dans une ancienne technique de conservation du poisson par fermentation dans du riz, pratiquée en Asie du Sud-Est puis en Chine avant d'arriver au Japon. Sa forme actuelle, à consommer rapidement, apparaît à Edo, l'ancienne Tokyo, au début du XIXe siècle. Le sushi est traditionnellement accompagné de sauce soja, de wasabi et de gingembre mariné. Il s'est largement diffusé dans le monde depuis la seconde moitié du XXe siècle."}
+];
+
+const KNOWN = ("Soleil|Terre|Lune|Mars (planète)|Jupiter (planète)|Saturne (planète)|Vénus (planète)|Mercure (planète)|Système solaire|Voie lactée|Trou noir|Big Bang|Gravitation|Électricité|Magnétisme|Atome|Électron|Photon|Lumière|Arc-en-ciel|Eau|Oxygène|Carbone|Fer|Or|Hydrogène|Volcan|Séisme|Tsunami|Cyclone tropical|Tornade|Glacier|Désert|Forêt tropicale|Océan Atlantique|Océan Pacifique|Photosynthèse|Cellule (biologie)|Acide désoxyribonucléique|Évolution (biologie)|Charles Darwin|Isaac Newton|Albert Einstein|Marie Curie|Louis Pasteur|Galilée (savant)|Nicolas Copernic|Vaccin|Pénicilline|Antibiotique|Aspirine|Paracétamol|Insuline|Cœur|Cerveau|Sang|Dinosaure|Mammouth laineux|Baleine bleue|Grand requin blanc|Grand dauphin|Éléphant|Lion|Tigre|Loup gris|Ours blanc|Panda géant|Girafe|Chat|Chien|Cheval|Abeille|Fourmi|Papillon|Pieuvre|Manchot empereur|Aigle royal|Crocodile|Serpent|Tortue|Grenouille|Chêne|Tournesol|Bambou|Champignon|Café|Thé|Chocolat|Cacao|Vanille|Tomate|Pomme de terre|Riz|Blé|Maïs|Banane|Fraise|Pomme|Raisin|Olive|Fromage|Pain|Baguette (pain)|Croissant (viennoiserie)|Pizza|Sushi|Hamburger|Crêpe|Ratatouille|Champagne (AOC)|Vin|Bière|Miel|Sel|Sucre|Chewing-gum|France|Paris|Marseille|Lyon|Bordeaux|Toulouse|Nice|Corse|Bretagne|Normandie|Alpes|Pyrénées|Mont Blanc|Loire|Seine|Rhin|Danube|Nil|Amazone|Mississippi (fleuve)|Everest|Sahara|Antarctique|Groenland|Islande|Japon|Chine|Inde|Brésil|Australie|Canada|Mexique|Égypte|Italie|Espagne|Allemagne|Royaume-Uni|Russie|États-Unis|Grèce|Maroc|Sénégal|Madagascar|New York|Londres|Rome|Venise|Tokyo|Berlin|Moscou|Jérusalem|Istanbul|Rio de Janeiro|Hawaï|Mer Méditerranée|Himalaya|Grand Canyon|Chutes du Niagara|Tour Eiffel|Arc de triomphe de l'Étoile|Cathédrale Notre-Dame de Paris|Château de Versailles|Musée du Louvre|Mont-Saint-Michel|Colisée|Tour de Pise|Pyramide de Khéops|Grand Sphinx de Gizeh|Grande Muraille|Taj Mahal|Machu Picchu|Stonehenge|Statue de la Liberté|Big Ben|Acropole d'Athènes|Pétra|Angkor Vat|Sagrada Família|Pont du Gard|Viaduc de Millau|Burj Khalifa|Kremlin de Moscou|Cité interdite|Alhambra|Île de Pâques|Préhistoire|Homo sapiens|Homme de Néandertal|Égypte antique|Toutânkhamon|Cléopâtre VII|Jules César|Empire romain|Pompéi|Alexandre le Grand|Grèce antique|Vikings|Charlemagne|Moyen Âge|Croisades|Jeanne d'Arc|Guerre de Cent Ans|Peste noire|Christophe Colomb|Renaissance|Léonard de Vinci|Michel-Ange|Louis XIV|Révolution française|Prise de la Bastille|Napoléon Ier|Bataille de Waterloo|Révolution industrielle|Machine à vapeur|Première Guerre mondiale|Seconde Guerre mondiale|Débarquement de Normandie|Charles de Gaulle|Guerre froide|Mur de Berlin|Union européenne|Titanic|Apollo 11|Neil Armstrong|Martin Luther King|Nelson Mandela|Mohandas Karamchand Gandhi|Abraham Lincoln|Winston Churchill|Mai 68|Wolfgang Amadeus Mozart|Ludwig van Beethoven|Jean-Sébastien Bach|Frédéric Chopin|The Beatles|Elvis Presley|Michael Jackson|Édith Piaf|Jazz|Rock|Hip-hop|Opéra|Piano|Violon|Guitare|Saxophone|Orgue|Accordéon|Pablo Picasso|Vincent van Gogh|Claude Monet|Impressionnisme|La Joconde|Victor Hugo|Molière|Jean de La Fontaine|Albert Camus|Marcel Proust|Antoine de Saint-Exupéry|Le Petit Prince|Les Misérables|William Shakespeare|Homère|Odyssée|Don Quichotte|Cinéma|Charlie Chaplin|Walt Disney|Bande dessinée|Les Aventures de Tintin|Astérix|Photographie|Sculpture|Théâtre|Ballet|Cirque|Football|Rugby à XV|Tennis|Basket-ball|Handball|Cyclisme|Tour de France|Jeux olympiques|Coupe du monde de football|Natation|Marathon|Ski alpin|Judo|Boxe anglaise|Formule 1|Golf|Pétanque|Échecs|Go (jeu)|Jeu de dames|Poker|Rubik's Cube|Lego|Monopoly|Tetris|Jeu vidéo|Sudoku|Mots croisés|Cerf-volant|Skateboard|Surf|Internet|World Wide Web|Ordinateur|Téléphone mobile|Smartphone|Télévision|Radio|Imprimerie|Roue|Boussole|Horloge|Montre|Lampe à incandescence|Automobile|Train|Train à grande vitesse|Avion|Concorde|Fusée|Hélicoptère|Bicyclette|Métro|Sous-marin|Paquebot|Montgolfière|Satellite artificiel|Station spatiale internationale|Robot|Intelligence artificielle|Bitcoin|Appareil photographique|Microscope|Télescope|Laser|Réfrigérateur|Parapluie|Crayon|Stylo à bille|Papier|Livre|Dictionnaire|Encyclopédie|Wikipédia|Monnaie|Euro|Calendrier grégorien|Alphabet latin|Mathématiques|Pi|Zéro|Nombre premier|Théorème de Pythagore|Pythagore|Philosophie|Socrate|Platon|Aristote|René Descartes|Démocratie|Mythologie grecque|Zeus|Héraclès|Dragon|Licorne|Vampire|Père Noël|Noël|Halloween|Pâques|Carnaval|Bouddhisme|Château fort|Phare|Moulin à vent|Gratte-ciel|Cathédrale|Pyramide|Volcan|Ouragan|Aurore polaire|Éclipse|Comète|Météorite").split("|");
+
+const STOP = new Set("le la les l un une des de du d et ou en a au aux est sont par pour sur dans avec ce cet cette ces se sa son ses qui que qu il ils elle elles on y ne n s c j lui leur leurs dont mais comme plus pas".split(" "));
+const ELIDE = {le:"l",la:"l",de:"d",que:"qu",ne:"n",se:"s",ce:"c",je:"j",te:"t",me:"m"};
+const WORD_RE = /aujourd['’]hui|[\p{L}\p{N}]+/giu;
+const API = "https://fr.wikipedia.org/w/api.php";
+
+const $ = id => document.getElementById(id);
+const norm = s => s.toLowerCase().replace(/’/g,"'").replace(/œ/g,"oe").replace(/æ/g,"ae").normalize("NFD").replace(/[̀-ͯ]/g,"");
+function stem(n){ if(n.length<4) return n; let s=n.replace(/[sx]$/,""); if(s.length>4 && s.endsWith("e")) s=s.slice(0,-1); return s; }
+const isNum = n => /^\d+$/.test(n);
+function lsGet(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch{ return d; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} }
+const plural = (n,s,p) => n+" "+(n>1?(p||s+"s"):s);
+const esc = s => s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let ST = null, WORDS = [], LOADING = false;
+let mode = lsGet("caviarde.mode", "known");
+let stats = Object.assign({played:[],games:0,wins:0,guessSum:0,best:null}, lsGet("caviarde.stats", {}));
+
+/* ---------- Wikipédia ---------- */
+async function api(params){
+  const url = API+"?"+new URLSearchParams({format:"json",formatversion:"2",origin:"*",...params});
+  const r = await fetch(url);
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  return r.json();
+}
+function cleanLine(l){
+  return l.replace(/\(\s*[,;:]?\s*\)/g,"").replace(/\(\s*[,;]\s*/g,"(").replace(/\s+([,.;:)])/g,(m,c)=>c===":"||c===";"?" "+c:c)
+          .replace(/\(\s+/g,"(").replace(/\s{2,}/g," ").trim();
+}
+function shapeExtract(ext){
+  const paras=[]; let words=0, intro=true;
+  for(const raw of ext.split("\n")){
+    const l=raw.trim();
+    if(!l) continue;
+    if(/^=+[^=].*=+$/.test(l)){
+      if(/^==\s*(Notes|Références|Voir aussi|Bibliographie|Liens externes|Annexes|Articles connexes)/i.test(l)) break;
+      intro=false; if(words>=200) break; continue;
+    }
+    const c=cleanLine(l); const n=c.split(/\s+/).length;
+    if(n<6) continue;
+    if(words>=150 && words+n>650) break;
+    paras.push(c); words+=n;
+    if(words>=(intro?520:420)) break;
+  }
+  return {text:paras.join("\n\n"), words};
+}
+const displayTitle = t => t.replace(/\s*\([^)]*\)\s*$/,"").trim();
+async function loadByTitle(title){
+  const d = await api({action:"query",redirects:"1",prop:"extracts|pageprops",ppprop:"disambiguation",explaintext:"1",exsectionformat:"wiki",titles:title});
+  const p = d?.query?.pages?.[0];
+  if(!p || p.missing || p.invalid || p.pageprops?.disambiguation!==undefined || !p.extract) return null;
+  const {text,words} = shapeExtract(p.extract);
+  if(words<80) return null;
+  return {t:displayTitle(p.title), wt:p.title, x:text, src:"wiki"};
+}
+async function randomTitle(){
+  for(let tries=0; tries<4; tries++){
+    const d = await api({action:"query",generator:"random",grnnamespace:"0",grnlimit:"25",prop:"info|pageprops",ppprop:"disambiguation"});
+    const ok = (d?.query?.pages||[]).filter(p=>p.length>=18000 && p.pageprops?.disambiguation===undefined && !/^(Liste|Chronologie|Saison|Élections?) /i.test(p.title));
+    if(ok.length) return ok[Math.floor(Math.random()*ok.length)].title;
+  }
+  return null;
+}
+function pickKnown(){
+  const cur=ST?.article?.key;
+  let pool=KNOWN.filter(t=>!stats.played.includes(t) && t!==cur);
+  if(!pool.length){ stats.played=stats.played.filter(t=>!KNOWN.includes(t)); pool=KNOWN.filter(t=>t!==cur); }
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function pickLocal(){
+  const pool=ARTICLES.filter(a=>a.t!==ST?.article?.t);
+  return {...pool[Math.floor(Math.random()*pool.length)], src:"local"};
+}
+async function nextArticle(){
+  if(LOADING) return;
+  LOADING=true; showLoading();
+  let art=null, offline=false;
+  try{
+    for(let i=0; i<5 && !art; i++){
+      let key;
+      if(mode==="random"){ key=await randomTitle(); if(!key) continue; }
+      else key=pickKnown();
+      art = await loadByTitle(key);
+      if(art) art.key=key;
+      else if(mode!=="random"){ stats.played.push(key); }
+    }
+  }catch(e){ offline=true; }
+  if(!art){ art=pickLocal(); }
+  LOADING=false;
+  startArticle(art);
+  if(offline || art.src==="local") feedback('<span class="warnline">Wikipédia est injoignable pour le moment : voici un article de secours. Réessayez « Article suivant » plus tard.</span>');
+}
+
+/* ---------- Partie ---------- */
+function mkWord(raw, title){ const n=norm(raw); return {w:raw, n, s:stem(n), fn:STOP.has(n), len:[...raw].length, title:!!title, el:null}; }
+function tokenize(text, title){
+  const out=[]; let last=0;
+  for(const m of text.matchAll(WORD_RE)){
+    if(m.index>last) out.push({sep:text.slice(last,m.index)});
+    out.push(mkWord(m[0], title)); last=m.index+m[0].length;
+  }
+  if(last<text.length) out.push({sep:text.slice(last)});
+  return out;
+}
+const matches = (t,g) => t.n===g || t.s===stem(g) || (ELIDE[g]!==undefined && t.n===ELIDE[g]);
+const isRev = t => ST.revN.has(t.n) || ST.revS.has(t.s);
+
+function newState(article){
+  return {article, guesses:[], revN:new Set(), revS:new Set(), near:{}, last:null, spot:null, done:false, won:false,
+    titleToks:tokenize(article.t,true), paras:article.x.trim().split(/\n\s*\n/).map(p=>tokenize(p.trim(),false))};
+}
+function startArticle(article){
+  ST = newState(article);
+  const key=article.key||article.t;
+  if(article.src==="wiki" && mode!=="random" && !stats.played.includes(key)) stats.played.push(key);
+  lsSet("caviarde.stats", stats);
+  document.querySelector("article").classList.remove("loading");
+  build(); render(); save();
+  feedback("Nouvel article. Tout est masqué, même les petits mots : chaque mot proposé se révèle partout où il apparaît.");
+  $("guess").value=""; $("guess").disabled=false; $("go").disabled=false;
+  $("guess").focus({preventScroll:true});
+  window.scrollTo({top:0});
+}
+function showLoading(){
+  ST=null; WORDS=[];
+  $("banner").hidden=true; $("skip").hidden=true;
+  $("guess").disabled=true; $("go").disabled=true;
+  document.querySelector("article").classList.add("loading");
+  const mk=n=>{ const s=document.createElement("span"); s.className="h"; s.style.setProperty("--len",n); return s; };
+  $("title").replaceChildren(mk(7)," ",mk(5));
+  const p=document.createElement("p"); [3,8,4,2,11,5,6,3,9,2,7,4,10,3,6,8,2,5].forEach((n,i)=>{ if(i) p.append(" "); p.append(mk(n)); });
+  $("body").replaceChildren(p);
+  $("from").textContent="Recherche d'un article sur Wikipédia…";
+  $("meta").textContent="Chargement…";
+  feedback("Chargement d'un article Wikipédia…");
+}
+function save(){
+  lsSet("caviarde.game", {article:ST.article, guesses:ST.guesses, revN:[...ST.revN], revS:[...ST.revS], near:ST.near, last:ST.last, done:ST.done, won:ST.won});
+}
+function restore(g){
+  if(!g || !g.article || typeof g.article.t!=="string" || typeof g.article.x!=="string") return false;
+  ST = newState(g.article);
+  ST.guesses = Array.isArray(g.guesses)?g.guesses:[];
+  ST.revN = new Set(g.revN||[]); ST.revS = new Set(g.revS||[]);
+  ST.near = g.near||{}; ST.last=g.last||null; ST.done=!!g.done; ST.won=!!g.won;
+  build(); render(); return true;
+}
+
+/* ---------- Rendu ---------- */
+function nodeFor(t){
+  if(t.sep!==undefined) return document.createTextNode(t.sep);
+  const s=document.createElement("span"); t.el=s; s.dataset.i=WORDS.length; WORDS.push(t); return s;
+}
+function build(){
+  WORDS=[]; $("title").replaceChildren(); $("body").replaceChildren();
+  for(const t of ST.titleToks) $("title").append(nodeFor(t));
+  for(const para of ST.paras){ const p=document.createElement("p"); for(const t of para) p.append(nodeFor(t)); $("body").append(p); }
+}
+const heat = s => s>=85?3:s>=65?2:1;
+function render(){
+  const lastN=ST.last, spot=ST.spot;
+  for(const t of WORDS){
+    const el=t.el, rev=isRev(t);
+    if(rev || ST.done){
+      let c="w";
+      if(!rev) c+=" late";
+      else if(lastN && matches(t,lastN) && !ST.done) c+=" fresh";
+      if(spot && matches(t,spot)) c+=" spot";
+      el.className=c;
+      if(el.textContent!==t.w) el.textContent=t.w;
+      el.removeAttribute("title"); el.removeAttribute("tabindex"); el.removeAttribute("role"); el.removeAttribute("aria-label");
+    }else{
+      const nr=ST.near[t.n];
+      let c="h"+(nr?" near heat"+heat(nr.score):"")+(t.peek&&!nr?" peek":"");
+      if(spot && nr && norm(nr.word)===spot) c+=" spot";
+      el.className=c;
+      el.style.setProperty("--len",t.len);
+      el.dataset.len=t.len;
+      el.textContent=nr?nr.word:"";
+      el.title=nr?`« ${nr.word} » est de la même famille · ${t.len} lettres`:`${t.len} lettres`;
+      el.setAttribute("role","button"); el.tabIndex=0;
+      el.setAttribute("aria-label", nr?`mot caché de ${t.len} lettres, proche de ${nr.word}`:`mot caché de ${t.len} lettres`);
+    }
+  }
+  renderSide();
+}
+function renderSide(){
+  const n=ST.guesses.length;
+  $("meta").textContent=(ST.article.src==="wiki"?"Wikipédia":"Article de secours")+" · "+plural(n,"coup");
+  $("gcount").textContent=n;
+  $("gempty").hidden=n>0;
+  $("from").textContent=ST.article.src==="wiki"?"Début d'un article de Wikipédia, l'encyclopédie libre":"Article de secours (Wikipédia injoignable)";
+  const ul=$("glist"); ul.replaceChildren();
+  for(const g of [...ST.guesses].reverse()){
+    const li=document.createElement("li"); li.tabIndex=0; li.dataset.n=g.n;
+    if(ST.spot===g.n) li.className="on";
+    const i=document.createElement("span"); i.className="gi"; i.textContent=g.i;
+    const w=document.createElement("span"); w.className="gw"; w.textContent=g.word;
+    if(g.title){ const e=document.createElement("em"); e.textContent="titre"; w.append(e); }
+    const nb=document.createElement("span");
+    if(g.near>0){ nb.className="gn heat2"; nb.textContent="~"+g.near; nb.title=plural(g.near,"mot de la même famille","mots de la même famille"); }
+    const c=document.createElement("span"); c.className="gc"+(g.count>0?" pos":""); c.textContent=g.count; c.title=plural(g.count,"occurrence");
+    li.append(i,w,nb,c); ul.append(li);
+  }
+  $("sGames").textContent=stats.games; $("sWins").textContent=stats.wins;
+  $("sAvg").textContent=stats.wins?Math.round(stats.guessSum/stats.wins):"–";
+  $("sBest").textContent=stats.best??"–";
+  $("skip").hidden=ST.done;
+  renderBanner();
+}
+function renderBanner(){
+  const b=$("banner");
+  if(!ST.done){ b.hidden=true; b.replaceChildren(); return; }
+  b.hidden=false; b.className="banner"; b.replaceChildren();
+  const msg=document.createElement("div"); msg.className="msg";
+  const strong=document.createElement("strong"); strong.textContent=ST.article.t;
+  if(ST.won) msg.append("Trouvé en "+plural(ST.guesses.length,"coup")+" : ",strong,".");
+  else msg.append("Réponse : ",strong,".");
+  const small=document.createElement("small");
+  small.append("Les mots soulignés en pointillé n'avaient pas été découverts.");
+  if(ST.article.src==="wiki"){
+    small.append(" ");
+    const a=document.createElement("a"); a.href="https://fr.wikipedia.org/wiki/"+encodeURIComponent(ST.article.wt.replace(/ /g,"_"));
+    a.target="_blank"; a.rel="noopener"; a.textContent="Lire l'article complet sur Wikipédia";
+    small.append(a);
+  }
+  msg.append(small);
+  const btns=document.createElement("div"); btns.className="btns";
+  const next=document.createElement("button"); next.className="btn primary"; next.type="button"; next.id="next"; next.textContent="Article suivant";
+  next.onclick=nextArticle;
+  btns.append(next);
+  b.append(msg,btns);
+}
+
+/* ---------- Propositions ---------- */
+function feedback(html){ $("fb").innerHTML=html; }
+function guessLine(g){
+  let s=`<b>« ${esc(g.word)} »</b> : `;
+  s+=g.count>0?`<span class="hit">${plural(g.count,"occurrence")}</span>${g.title?", dont le titre":""}`:"absent";
+  if(g.near>0) s+=` · ${plural(g.near,"mot de la même famille","mots de la même famille")}`;
+  return s;
+}
+function submit(raw){
+  if(!ST || ST.done || LOADING) return;
+  const m=raw.match(WORD_RE);
+  if(!m){ feedback("Tapez un mot (lettres ou chiffres)."); return; }
+  const word=m[0], g=norm(word);
+  const extra=m.length>1?` <span>(un seul mot à la fois : seul « ${esc(word)} » a été pris)</span>`:"";
+  const prev=ST.guesses.find(x=>x.n===g);
+  if(prev){ ST.spot=g; render(); feedback(`Déjà proposé (n°${prev.i}). `+guessLine(prev)); scrollToSpot(); return; }
+
+  const entry={word, n:g, i:ST.guesses.length+1, count:0, near:0, title:false};
+  ST.guesses.push(entry);
+  for(const t of WORDS) if(matches(t,g)){ entry.count++; if(t.title) entry.title=true; }
+  ST.revN.add(g); ST.revS.add(stem(g)); if(ELIDE[g]) ST.revN.add(ELIDE[g]);
+  ST.last=g; ST.spot=null;
+
+  if(!isNum(g)){
+    const seen=new Set();
+    for(const t of WORDS){
+      if(t.fn || isRev(t) || seen.has(t.n) || isNum(t.n)) continue;
+      seen.add(t.n);
+      let k=0; const L=Math.min(t.n.length,g.length); while(k<L && t.n[k]===g[k]) k++;
+      if(k>=5 && k>=0.7*L){ const cur=ST.near[t.n]; if(!cur || cur.score<70){ ST.near[t.n]={word,score:70}; entry.near++; } }
+    }
+  }
+
+  if(WORDS.filter(t=>t.title).every(isRev)){ finish(true); feedback(`<b>Bravo !</b> Titre trouvé en ${plural(ST.guesses.length,"coup")}.`); return; }
+  render(); save();
+  feedback(guessLine(entry)+extra);
+}
+function finish(won){
+  ST.done=true; ST.won=won;
+  stats.games++;
+  if(won){ stats.wins++; stats.guessSum+=ST.guesses.length; stats.best=stats.best==null?ST.guesses.length:Math.min(stats.best,ST.guesses.length); }
+  lsSet("caviarde.stats",stats);
+  render(); save();
+  $("next")?.focus({preventScroll:true});
+  window.scrollTo({top:0,behavior:reduceMotion()?"auto":"smooth"});
+}
+function scrollToSpot(){
+  const el=document.querySelector("#body .spot, #title .spot");
+  if(el) el.scrollIntoView({block:"center",behavior:reduceMotion()?"auto":"smooth"});
+}
+
+/* ---------- Événements ---------- */
+$("form").addEventListener("submit",e=>{ e.preventDefault(); const v=$("guess").value; $("guess").value=""; submit(v); });
+function peek(target){
+  if(!ST) return false;
+  const h=target.closest(".h"); if(!h || h.dataset.i===undefined) return false;
+  const t=WORDS[+h.dataset.i]; if(t && !ST.near[t.n]){ t.peek=!t.peek; render(); }
+  return true;
+}
+for(const id of ["body","title"]){
+  $(id).addEventListener("click",e=>peek(e.target));
+  $(id).addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ") && peek(e.target)) e.preventDefault(); });
+}
+function pickGuess(li){ const n=li.dataset.n; ST.spot=ST.spot===n?null:n; render(); if(ST.spot) scrollToSpot(); }
+$("glist").addEventListener("click",e=>{ const li=e.target.closest("li"); if(li) pickGuess(li); });
+$("glist").addEventListener("keydown",e=>{ const li=e.target.closest("li"); if(li&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); pickGuess(li); } });
+let skipArmed=null;
+$("skip").addEventListener("click",()=>{
+  const b=$("skip");
+  if(!ST || ST.done) return;
+  if(!skipArmed){ b.textContent="Confirmer l'abandon"; b.className="btn warn"; skipArmed=setTimeout(()=>{ skipArmed=null; b.textContent="Abandonner"; b.className="btn quiet"; },3500); return; }
+  clearTimeout(skipArmed); skipArmed=null; b.textContent="Abandonner"; b.className="btn quiet";
+  finish(false); feedback(`Réponse : <b>${esc(ST.article.t)}</b>. Passez à l'article suivant quand vous voulez.`);
+});
+$(mode==="random"?"srcRandom":"srcKnown").checked=true;
+document.querySelectorAll('input[name="src"]').forEach(r=>r.addEventListener("change",e=>{ mode=e.target.value; lsSet("caviarde.mode",mode); }));
+
+/* ---------- Démarrage ---------- */
+if(restore(lsGet("caviarde.game",null))){
+  if(ST.done) feedback("Partie terminée. Passez à l'article suivant quand vous voulez.");
+  else{ const g=ST.guesses.find(x=>x.n===ST.last); feedback(g?"Partie reprise. Dernière proposition : "+guessLine(g):"Partie reprise."); }
+}else nextArticle();
+</script>
+</body>
+</html>
