@@ -181,12 +181,83 @@ details ul b{color:var(--ink);font-weight:600}
 .legendbar .h{min-width:0;height:auto;line-height:1.5;padding:0 .45em;cursor:default;font-style:italic;vertical-align:baseline}
 .legendbar .note-inline{font-style:italic}
 @media (max-width:480px){.legendbar{gap:5px 12px;font-size:.8rem}.legendbar .note-inline{display:none}}
+
+/* Sélecteur de jeu */
+.games{display:inline-flex;border:1px solid var(--ink);border-radius:7px;overflow:hidden}
+.games button{font:600 .9rem/1 var(--f-ui);letter-spacing:.02em;padding:.5em .8em;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.games button+button{border-left:1px solid var(--ink)}
+.games button[aria-pressed="true"]{background:var(--pen);color:var(--pen-ink)}
+.games button:focus-visible{outline:2px solid var(--ink);outline-offset:-3px}
+@media (max-width:560px){.top .wrap{gap:10px}.games button,.modes button{padding:.5em .6em;font-size:.85rem}}
+
+/* Chaud-froid */
+.gwrap{display:grid;grid-template-columns:minmax(0,1fr) 17.5rem;gap:48px;padding-block:24px 64px}
+@media (max-width:860px){.gwrap{grid-template-columns:minmax(0,1fr);gap:28px}}
+.gcol{min-width:0;display:grid;gap:10px;align-content:start;max-width:720px}
+.gside{min-width:0;display:grid;gap:24px;align-content:start}
+.tscroll{overflow-x:auto;margin-top:6px}
+.ctable{width:100%;border-collapse:collapse;font-size:1rem}
+.ctable th{font:500 .72rem var(--f-num);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule)}
+.ctable td{padding:7px 8px;border-bottom:1px solid var(--rule);vertical-align:middle}
+.ctable .num{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ctable td.num:first-child{color:var(--ink-2);font-size:.8rem}
+.ctable .ico{width:2rem;text-align:center}
+.ctable td.word{font-family:var(--f-read);overflow-wrap:anywhere}
+.ctable tbody#cLast tr td{background:color-mix(in srgb,var(--pen) 10%,transparent);border-bottom:2px solid var(--pen)}
+.ctable tr.win td{background:color-mix(in srgb,var(--ok) 16%,transparent)}
+.ctable tr.flash td{background:color-mix(in srgb,var(--near2) 30%,transparent)}
+.prog{display:flex;align-items:center;gap:8px;min-width:9rem}
+.prog .pb{flex:1;height:8px;border-radius:4px;background:var(--rule);overflow:hidden}
+.prog .pb i{display:block;height:100%;background:var(--near3);border-radius:4px}
+.prog span{font:500 .78rem var(--f-num);color:var(--ink-2);min-width:3.4em;text-align:right}
+.tkey{list-style:none;margin:0;padding:0;display:grid;gap:7px;font-size:.92rem}
+.tkey li{display:grid;grid-template-columns:1.8rem minmax(0,1fr);gap:8px;align-items:start}
+.tkey .ti{font-size:1.1rem;line-height:1.3}
+.closest{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.closest span{font-family:var(--f-read);font-size:.95rem;padding:2px 8px;border:1px solid var(--rule);border-radius:12px}
+
+/* Lettres */
+.lwrap{display:grid;justify-items:center;gap:14px;padding-block:20px 56px}
+.lfb{text-align:center;max-width:36rem}
+#lBanner{width:100%;max-width:36rem}
+.lgrid{display:grid;gap:6px;width:100%;max-width:calc(var(--n,7) * 3.6rem)}
+.lrow{display:grid;grid-template-columns:repeat(var(--n,7),minmax(0,1fr));gap:6px}
+.lcell{aspect-ratio:1;max-width:100%;display:grid;place-items:center;border:2px solid var(--rule);border-radius:6px;background:var(--surface);font:700 clamp(1.1rem,5.2vw,1.9rem)/1 var(--f-mark);text-transform:uppercase;color:var(--ink);user-select:none}
+.lcell.typed{border-color:var(--ink-2)}
+.lcell.hint{color:color-mix(in srgb,var(--ink-2) 55%,transparent)}
+.lcell.ok,.lc.ok{background:var(--near3);border-color:var(--near3);color:#FFFFFF}
+.lcell.mid,.lc.mid{background:radial-gradient(circle,var(--near2) 0 60%,var(--pen) 62%);border-color:var(--pen);color:#15181B}
+.lcell.no,.lc.no{background:var(--pen);border-color:var(--pen);color:var(--pen-ink)}
+.lcell.flip{animation:flip .35s ease both}
+@keyframes flip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+.lrow.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.lkey{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;font-size:.88rem;color:var(--ink-2)}
+.lkey span{display:inline-flex;align-items:center;gap:6px}
+.lc{display:inline-grid;place-items:center;width:1.6em;height:1.6em;border-radius:4px;font:700 .85rem var(--f-mark);font-style:normal;border:2px solid transparent}
+.kb{display:grid;gap:6px;width:100%;max-width:34rem}
+.kbr{display:flex;gap:5px;justify-content:center}
+.kb button{flex:1 1 0;min-width:0;height:3.1rem;border:0;border-radius:6px;background:color-mix(in srgb,var(--ink) 12%,var(--surface));color:var(--ink);font:600 1.05rem var(--f-ui);cursor:pointer;padding:0}
+.kb button.wide{flex:1.6 1 0;font-size:.9rem}
+.kb button.ok{background:var(--near3);color:#FFFFFF}
+.kb button.mid{background:var(--near2);color:#15181B}
+.kb button.no{background:var(--pen);color:var(--pen-ink);opacity:.55}
+.kb button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
+.lstats{width:100%;max-width:34rem;margin-top:10px}
+.stats4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:480px){.stats4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){.lcell.flip,.lrow.shake{animation:none}}
 </style>
 </head>
 <body>
 <header class="top">
   <div class="wrap">
     <div class="mark" aria-label="Caviardé">CAVI<span class="redact">ARDÉ</span></div>
+    <div class="games" role="group" aria-label="Jeu">
+      <button type="button" data-g="article" aria-pressed="false">Article</button>
+      <button type="button" data-g="chaud" aria-pressed="false">Chaud-froid</button>
+      <button type="button" data-g="lettres" aria-pressed="false">Lettres</button>
+    </div>
     <div class="modes" role="group" aria-label="Mode de jeu">
       <button type="button" id="mDaily" aria-pressed="false">Du jour</button>
       <button type="button" id="mFree" aria-pressed="false">Illimité</button>
@@ -198,7 +269,7 @@ details ul b{color:var(--ink);font-weight:600}
   </div>
 </header>
 
-<div class="bar">
+<div class="bar" id="artBar">
   <div class="wrap">
     <form class="guess" id="form" autocomplete="off">
       <label for="guess" hidden>Proposer un mot</label>
@@ -217,7 +288,7 @@ details ul b{color:var(--ink);font-weight:600}
   </div>
 </div>
 
-<main class="wrap grid">
+<main class="wrap grid" id="artMain">
   <article>
     <div id="banner" hidden></div>
     <p class="eyebrow">Titre</p>
@@ -276,6 +347,72 @@ details ul b{color:var(--ink);font-weight:600}
     <p class="lic">Textes issus de <a href="https://fr.wikipedia.org" target="_blank" rel="noopener">Wikipédia</a>, sous licence <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.fr" target="_blank" rel="noopener">CC BY-SA 4.0</a>. Le lien vers l'article s'affiche en fin de partie.</p>
   </aside>
 </main>
+
+<main class="wrap gwrap" id="chaudMain" hidden>
+  <div class="gcol">
+    <div id="cBanner" hidden></div>
+    <form class="guess" id="cForm" autocomplete="off">
+      <label for="cInput" hidden>Proposer un mot</label>
+      <input id="cInput" type="text" placeholder="Proposez un mot…" autocapitalize="off" spellcheck="false" enterkeyhint="send" maxlength="40">
+      <button class="btn primary" type="submit">Essayer</button>
+    </form>
+    <div class="fb" id="cFb" aria-live="polite">Trouvez le mot secret. Chaque proposition indique à quel point vous en êtes proche par le sens.</div>
+    <div class="tscroll">
+      <table class="ctable">
+        <thead><tr><th class="num">N°</th><th>Mot</th><th class="num">°C</th><th class="ico"><span hidden>Indice</span></th><th>Progression</th></tr></thead>
+        <tbody id="cLast"></tbody>
+        <tbody id="cBody"></tbody>
+      </table>
+    </div>
+    <p class="empty" id="cEmpty">Commencez par des mots variés : « eau », « travail », « animal », « musique »… puis creusez autour des plus chauds.</p>
+  </div>
+  <aside class="gside">
+    <section class="sec">
+      <h2><span>Températures</span></h2>
+      <ul class="tkey">
+        <li><span class="ti">🥳</span><span>Mot trouvé</span></li>
+        <li><span class="ti">🔥</span><span>Brûlant : parmi les 10 mots les plus proches</span></li>
+        <li><span class="ti">🥵</span><span>Très chaud : dans les 100 plus proches</span></li>
+        <li><span class="ti">😎</span><span>Chaud : dans les 1 000 plus proches (la barre montre le rang en ‰)</span></li>
+        <li><span class="ti">🥶</span><span>Froid : hors des 1 000 plus proches</span></li>
+        <li><span class="ti">🧊</span><span>Glacé : température négative</span></li>
+      </ul>
+      <p class="note">La température mesure la proximité de sens avec le mot secret, de −100 à 100 °C. Toutes les formes d'un mot sont acceptées (pluriel, conjugaisons).</p>
+    </section>
+    <section class="sec">
+      <h2><span>Vos parties</span></h2>
+      <dl class="stats">
+        <div><dt>Parties</dt><dd id="cGames">0</dd></div>
+        <div><dt>Mots trouvés</dt><dd id="cWins">0</dd></div>
+        <div><dt>Coups en moyenne</dt><dd id="cAvg">–</dd></div>
+        <div><dt>Série du jour</dt><dd id="cStreak">0</dd></div>
+      </dl>
+    </section>
+    <button class="btn quiet" type="button" id="cGive">Abandonner et voir le mot</button>
+  </aside>
+</main>
+
+<main class="wrap lwrap" id="lettresMain" hidden>
+  <div id="lBanner" hidden></div>
+  <div class="fb lfb" id="lFb" aria-live="polite">Trouvez le mot en 6 essais. La première lettre est donnée.</div>
+  <div class="lgrid" id="lGrid" aria-label="Grille de jeu"></div>
+  <div class="lkey" aria-label="Code couleur">
+    <span><i class="lc ok">A</i> bien placée</span>
+    <span><i class="lc mid">A</i> mal placée</span>
+    <span><i class="lc no">A</i> absente</span>
+  </div>
+  <div class="kb" id="lKb" aria-label="Clavier"></div>
+  <section class="sec lstats">
+    <h2><span>Vos parties</span></h2>
+    <dl class="stats stats4">
+      <div><dt>Parties</dt><dd id="lGames">0</dd></div>
+      <div><dt>Mots trouvés</dt><dd id="lWins">0</dd></div>
+      <div><dt>Essais en moyenne</dt><dd id="lAvg">–</dd></div>
+      <div><dt>Série du jour</dt><dd id="lStreak">0</dd></div>
+    </dl>
+  </section>
+</main>
+
 
 <script>
 const ARTICLES = [
@@ -447,14 +584,25 @@ async function loadDaily(){
   startArticle(art);
   if(offline) feedback('<span class="warnline">Wikipédia est injoignable : l\'article du jour de secours est affiché. Rechargez la page plus tard pour le vrai.</span>');
 }
-let PLAY = lsGet("caviarde.play","daily")==="free"?"free":"daily";
-const gameKey = () => PLAY==="daily" ? "caviarde.game.daily" : "caviarde.game";
+const GAMES=["article","chaud","lettres"];
+let GAME = GAMES.includes(lsGet("caviarde.jeu","article")) ? lsGet("caviarde.jeu","article") : "article";
+const playKey = g => g==="article" ? "caviarde.play" : "caviarde.play."+g;
+const PLAYS = Object.fromEntries(GAMES.map(g=>[g, lsGet(playKey(g),"daily")==="free"?"free":"daily"]));
+const gameKey = () => PLAYS.article==="daily" ? "caviarde.game.daily" : "caviarde.game";
 let dstats = Object.assign({hist:{},streak:0,lastWin:null}, lsGet("caviarde.dstats",{}));
 function boot(){
-  $("mDaily").setAttribute("aria-pressed",PLAY==="daily"); $("mFree").setAttribute("aria-pressed",PLAY==="free");
-  $("srcSec").hidden = PLAY==="daily";
+  $("mDaily").setAttribute("aria-pressed",PLAYS[GAME]==="daily"); $("mFree").setAttribute("aria-pressed",PLAYS[GAME]==="free");
+  document.querySelectorAll(".games button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.g===GAME));
+  $("artBar").hidden = $("artMain").hidden = GAME!=="article";
+  $("chaudMain").hidden = GAME!=="chaud";
+  $("lettresMain").hidden = GAME!=="lettres";
+  $("skip").hidden = GAME!=="article" || !ST || ST.done;
+  if(GAME==="article") bootArticle(); else if(GAME==="chaud") Chaud.boot(); else Lettres.boot();
+}
+function bootArticle(){
+  $("srcSec").hidden = PLAYS.article==="daily";
   const g=lsGet(gameKey(),null);
-  if(PLAY==="daily"){
+  if(PLAYS.article==="daily"){
     const {date}=todayInfo();
     if(g && g.article?.daily?.date===date && restore(g)) resumed();
     else loadDaily();
@@ -467,10 +615,18 @@ function resumed(){
   else{ const g=ST.guesses.find(x=>x.n===ST.last); feedback(g?"Partie reprise. Dernière proposition : "+guessLine(g):"Partie reprise."); }
 }
 function switchMode(m){
-  if(m===PLAY || LOADING) return;
-  if(ST) save();
-  PLAY=m; lsSet("caviarde.play",PLAY);
+  if(m===PLAYS[GAME] || LOADING) return;
+  if(GAME==="article" && ST) save();
+  PLAYS[GAME]=m; lsSet(playKey(GAME),m);
   boot();
+}
+function switchGame(g){
+  if(g===GAME || LOADING || !GAMES.includes(g)) return;
+  if(GAME==="article" && ST) save();
+  GAME=g; lsSet("caviarde.jeu",g);
+  document.activeElement?.blur?.();
+  boot();
+  window.scrollTo({top:0});
 }
 
 /* ---------- Feux d'artifice ---------- */
@@ -541,7 +697,7 @@ async function shareResult(){
 }
 
 /* ---------- Proximité sémantique ---------- */
-let VEC=null;
+let VEC=null, VEC_FAILED=false;
 function vecStatus(html){ $("vstat").innerHTML=html; }
 async function loadVectors(){
   try{
@@ -557,7 +713,7 @@ async function loadVectors(){
     for(let i=0;i<n;i++){ let s=0; const o=i*dim; for(let k=0;k<dim;k++){ const v=data[o+k]; s+=v*v; } norms[i]=Math.sqrt(s)||1; }
     const idx=new Map(), nidx=new Map();
     words.forEach((w,i)=>{ idx.set(w,i); const k=norm(w); if(!nidx.has(k)) nidx.set(k,i); });
-    VEC={n,dim,data,norms,idx,nidx};
+    VEC={n,dim,data,norms,idx,nidx,words};
     const off=16+wl+n*dim;
     if(buf.byteLength>=off+8 && String.fromCharCode(...new Uint8Array(buf,off,4))==="LEMM"){
       const ll=dv.getUint32(off+4,true);
@@ -572,8 +728,10 @@ async function loadVectors(){
     }
     applyLemmas();
     vecStatus(`<b>Actif.</b> Les mots proches par le sens s'affichent dans les cases (${n.toLocaleString("fr-FR")} mots connus).`);
+    if(GAME!=="article") boot();
   }catch(e){
-    VEC=null;
+    VEC=null; VEC_FAILED=true;
+    if(GAME!=="article") boot();
     vecStatus(location.protocol==="file:"
       ? "Indisponible en ouvrant le fichier directement : mettez le site en ligne (GitHub Pages) pour activer les mots proches. En attendant, seuls les mots de la même famille sont détectés."
       : "Indisponible : le fichier <b>vecteurs.bin</b> doit se trouver à côté de index.html. En attendant, seuls les mots de la même famille sont détectés.");
@@ -886,8 +1044,342 @@ $("skip").addEventListener("click",()=>{
 $(mode==="random"?"srcRandom":"srcKnown").checked=true;
 document.querySelectorAll('input[name="src"]').forEach(r=>r.addEventListener("change",e=>{ mode=e.target.value; lsSet("caviarde.mode",mode); }));
 
+const CHAUD_WORDS=["partie", "petit", "année", "moment", "ville", "mois", "histoire", "nouveau", "part", "travail", "prendre", "état", "aller", "cours", "politique", "femme", "prix", "point", "lieu", "vrai", "droit", "coup", "mettre", "maison", "tête", "famille", "parler", "suite", "besoin", "genre", "savoir", "société", "côté", "pouvoir", "question", "raison", "sens", "soir", "effet", "général", "partir", "dernier", "nombre", "site", "mère", "passer", "parti", "père", "rapport", "trouver", "face", "fille", "gouvernement", "gros", "guerre", "niveau", "quatre", "semaine", "service", "accord", "article", "donner", "problème", "président", "début", "exemple", "fils", "jeune", "système", "façon", "heure", "possible", "projet", "idée", "nuit", "argent", "tour", "film", "meilleur", "haut", "chef", "fort", "public", "main", "matin", "plan", "saison", "long", "retour", "situation", "amour", "journée", "nord", "grâce", "moyen", "ordre", "école", "cinq", "manière", "sujet", "enfant", "ministre", "vidéo", "beau", "région", "entreprise", "match", "simple", "deuxième", "juin", "peur", "plein", "septembre", "sécurité", "ancien", "anglais", "jouer", "époque", "lire", "santé", "train", "écrit", "développement", "juillet", "nombreux", "propre", "rendre", "vivre", "droite", "fond", "octobre", "siècle", "sortir", "terme", "avril", "frère", "janvier", "population", "venir", "action", "club", "culture", "cœur", "difficile", "milieu", "produit", "direction", "emploi", "période", "bois", "chance", "confiance", "croire", "décembre", "laisser", "mode", "novembre", "plaisir", "août", "blanc", "comprendre", "demander", "formation", "photo", "rôle", "attention", "bout", "esprit", "intérieur", "intérêt", "mouvement", "noir", "origine", "rouge", "sortie", "auteur", "février", "justice", "langue", "occasion", "offre", "qualité", "scène", "changer", "libre", "production", "vieux", "facile", "lien", "pire", "rester", "source", "troisième", "aider", "campagne", "cour", "objet", "valeur", "étude", "cher", "national", "particulier", "penser", "présent", "réponse", "réseau", "salle", "texte", "appel", "position", "économique", "activité", "américain", "association", "chercher", "création", "devenir", "expérience", "fonction", "impression", "nature", "arrêter", "chemin", "demi", "directeur", "liberté", "mariage", "organisation", "présence", "sein", "sort", "économie", "bureau", "compagnie", "pied", "réalité", "social", "sorte", "utiliser", "œuvre", "dimanche", "départ", "mauvais", "numéro", "regarder", "soleil", "travailler", "voie", "acheter", "attendre", "manger", "perdre", "victoire", "vérité", "communauté", "domaine", "payer", "proche", "répondre", "suivre", "administration", "gagner", "honneur", "journal", "matière", "ouest", "retrouver", "résultat", "sept", "soirée", "sport", "version", "arriver", "construction", "devoir", "information", "midi", "mission", "moitié", "pièce", "prêt", "technique", "énergie", "éviter", "bord", "contraire", "courant", "entendre", "finale", "heureux", "impossible", "joueur", "nécessaire", "porter", "samedi", "sang", "second", "sérieux", "terrain", "église", "créer", "décision", "défense", "frais", "hôtel", "instant", "majorité", "modèle", "obtenir", "solution", "commune", "contrat", "faux", "international", "total", "avenir", "discours", "maître", "personnel", "preuve", "prison", "vendredi", "éducation", "apprendre", "court", "endroit", "essayer", "huit", "lumière", "régime", "arrière", "commencer", "complètement", "montrer", "physique", "quartier", "territoire", "unique", "changement", "connaître", "lettre", "parole", "principe", "prochain", "radio", "édition", "assurer", "carrière", "commun", "couleur", "erreur", "espèce", "faible", "large", "lundi", "ministère", "neuf", "objectif", "relation", "respect", "responsable", "secteur", "soutien", "tomber", "concours", "différence", "fonds", "gestion", "normal", "ouverture", "village", "ciel", "clair", "combat", "comité", "continuer", "mémoire", "protection", "revenir", "tenir", "album", "cinéma", "crise", "expliquer", "garder", "historique", "industrie", "maladie", "militaire", "médecin", "permettre", "vouloir", "application", "chanson", "département", "environnement", "final", "maire", "opération", "parc", "traitement", "visage", "véritable", "écrire", "avion", "chien", "envoyer", "parfait", "port", "professeur", "transport", "vitesse", "étranger", "dossier", "hiver", "hôpital", "importance", "ouvrir", "pression", "puissance", "religion", "stade", "théâtre", "volonté", "évolution", "camp", "drôle", "débat", "oublier", "pauvre", "regard", "science", "utilisation", "absence", "blanche", "capable", "connaissance", "habitude", "poser", "principal", "russe", "secret", "émission", "chinois", "classique", "contact", "direct", "divers", "expression", "froid", "futur", "malade", "procès", "rapide", "réunion", "révolution", "tableau", "tendance", "vingt", "bébé", "communication", "côte", "finir", "goût", "humain", "peau", "surface", "vendre", "victime", "élection", "épisode", "allemand", "arrêt", "avocat", "bonheur", "budget", "caractère", "choisir", "compter", "consommation", "découvrir", "enseignement", "lendemain", "magnifique", "mari", "populaire", "prince", "province", "rentrer", "revenu", "secrétaire", "siège", "supérieur", "surprise", "vent", "capacité", "centrale", "chaud", "contexte", "extérieur", "hauteur", "naissance", "opposition", "recevoir", "rencontrer", "rire", "servir", "sœur", "actuel", "candidat", "capitaine", "capitale", "européen", "faveur", "front", "papier", "présenter", "tribunal", "télé", "accident", "courage", "entrer", "festival", "jeudi", "journaliste", "perte", "possibilité", "riche", "unité", "établissement", "anniversaire", "café", "chat", "coin", "identité", "moindre", "parcours", "pont", "protéger", "remettre", "responsabilité", "scientifique", "tirer", "violence", "appeler", "beauté", "bleu", "champ", "conférence", "danger", "football", "lycée", "mercredi", "mourir", "opinion", "participer", "personnage", "planète", "québécois", "retard", "théorie", "verre", "artiste", "assurance", "autorité", "collection", "conscience", "content", "croissance", "célèbre", "entier", "exposition", "extrême", "lecture", "maman", "moderne", "propriétaire", "propriété", "quitter", "quotidien", "triste", "vert", "énorme", "atteindre", "catégorie", "contenu", "dommage", "espoir", "existence", "exploitation", "mardi", "offrir", "religieux", "section", "spectacle", "appareil", "britannique", "château", "crédit", "empêcher", "entretien", "incroyable", "jeunesse", "méthode", "naturel", "règle", "salon", "silence", "sympa", "vision", "écran", "augmentation", "bruit", "classement", "conseiller", "docteur", "génération", "rappeler", "reine", "rejoindre", "roman", "tiers", "écouter", "étape", "ajouter", "boîte", "capital", "cheval", "client", "dangereux", "défendre", "exercice", "intervention", "logique", "monter", "reprendre", "revoir", "réaliser", "sentiment", "soin", "statut", "sélection", "vivant", "collège", "construire", "domicile", "examen", "moteur", "officiel", "partager", "participation", "patron", "préparer", "réduction", "réel", "souvenir", "tenter", "test", "utile", "achat", "bâtiment", "cerveau", "concept", "disposition", "indépendance", "lancer", "matériel", "quatrième", "réaction", "réduire", "sentir", "sourire", "tourner", "agir", "alcool", "amie", "battre", "coût", "différent", "disponible", "intention", "jardin", "mondial", "patrimoine", "phase", "rare", "séance", "urgence", "élève", "accepter", "agent", "agriculture", "améliorer", "auto", "cancer", "championnat", "complet", "concert", "constitution", "déclaration", "développer", "gérer", "impact", "joie", "local", "métier", "profiter", "sauver", "scolaire", "spécial", "télévision", "événement", "accueil", "aimer", "cadeau", "cent", "colère", "condition", "dormir", "excellent", "hasard", "jaune", "longueur", "minimum", "numérique", "professionnel", "proposition", "publication", "secours", "sommet", "électrique", "acteur", "arabe", "augmenter", "champion", "compétition", "crime", "efficace", "garçon", "issue", "mille", "pain", "résistance", "soutenir", "échelle", "aéroport", "canal", "comte", "défaut", "enfance", "hommage", "humanité", "logement", "maximum", "plage", "procédure", "produire", "proximité", "station", "stratégie", "volume", "égalité", "boire", "chômage", "claire", "comportement", "discussion", "distribution", "division", "définition", "effort", "mandat", "montagne", "médecine", "nourriture", "pape", "phénomène", "précédent", "amoureux", "animal", "appartement", "bateau", "bilan", "cabinet", "douleur", "démocratie", "espagnol", "faim", "lait", "lune", "office", "profit", "retourner", "température", "apporter", "bibliothèque", "climat", "conflit", "difficulté", "essentiel", "euro", "exception", "forêt", "frontière", "gratuit", "génie", "honte", "mobile", "occuper", "présentation", "présidentielle", "quantité", "thème", "ambiance", "central", "dessin", "défaite", "littérature", "métro", "nation", "rivière", "robe", "réalisation", "salaire", "soeur", "toucher", "traduction", "tranquille", "trente", "vérifier", "écriture", "épreuve", "basse", "chaleur", "commentaire", "conduite", "discuter", "détail", "haine", "humour", "informatique", "légende", "magasin", "rang", "recours", "réflexion", "tradition", "élément", "alliance", "arbre", "aspect", "conception", "engagement", "ennemi", "fonctionnement", "impôt", "initiative", "inutile", "investissement", "maintenir", "papa", "passion", "profil", "proposer", "préparation", "record", "remplacer", "respecter", "électricité", "belge", "canadien", "circulation", "conduire", "conversation", "coucher", "entraîneur", "essai", "financement", "gentil", "japonais", "jugement", "marcher", "monnaie", "nucléaire", "pluie", "primaire", "reconnaissance", "vélo", "échec", "amitié", "bain", "conséquence", "doux", "enceinte", "langage", "original", "philosophie", "plateau", "récupérer", "résidence", "talent", "tourisme", "traiter", "commercial", "convention", "couverture", "document", "empereur", "fier", "italien", "lever", "option", "policier", "promotion", "règlement", "scénario", "socialiste", "spéciale", "surveillance", "technologie", "tort", "trou", "voter", "caisse", "collectif", "couper", "exprimer", "fermer", "joli", "judiciaire", "libération", "mairie", "manuel", "million", "organisme", "personnalité", "princesse", "prouver", "puissant", "retirer", "réfléchir", "vaste", "dette", "doigt", "douze", "démocratique", "fenêtre", "former", "fournir", "grève", "imaginer", "plat", "terrible", "établir", "actualité", "agréable", "avancer", "bête", "catholique", "décider", "format", "génial", "installer", "lieutenant", "magazine", "partenaire", "performance", "plainte", "portable", "portrait", "réussir", "score", "superbe", "attitude", "batterie", "collaboration", "colonel", "commis", "composition", "convaincre", "diffusion", "essence", "immobilier", "imposer", "jeter", "normale", "poisson", "reconnaître", "représentation", "régler", "spécialiste", "stage", "évident", "actif", "automne", "bloc", "chocolat", "extrait", "fédéral", "immense", "immeuble", "interview", "léger", "ordinateur", "souci", "séjour", "transfert", "vigueur", "zéro", "calcul", "choc", "civil", "disque", "décret", "désir", "déterminer", "enlever", "entraînement", "fabrication", "lourd", "mener", "micro", "morale", "obligation", "officier", "prénom", "rock", "solide", "tentative", "vallée", "égard", "agricole", "appliquer", "attaquer", "autorisation", "circuit", "courir", "déjeuner", "délai", "efficacité", "idéal", "individu", "intelligence", "mention", "organiser", "quart", "réputation", "secondaire", "studio", "trafic", "voisin", "étudier", "angle", "appui", "billet", "bière", "cacher", "chère", "coupable", "culturel", "cérémonie", "détruire", "enfer", "gardien", "geste", "juger", "majeur", "notion", "pardon", "poursuivre", "raconter", "règne", "récit", "sommeil", "accueillir", "atelier", "automobile", "cinquième", "conserver", "foot", "gouverneur", "interprétation", "juridique", "leader", "manifestation", "moral", "municipal", "noter", "positif", "procureur", "pétrole", "citoyen", "commissaire", "coopération", "degré", "drapeau", "franc", "fuite", "gamme", "institution", "obligatoire", "potentiel", "pousser", "sondage", "standard", "trésor", "électronique", "évidence", "bourse", "comparaison", "destination", "explication", "exécution", "inscription", "mail", "outil", "paiement", "parisien", "profondeur", "publicité", "quinze", "régional", "résoudre", "réussite", "témoin", "échapper", "alimentation", "apparition", "arrondissement", "artistique", "ballon", "caméra", "conclusion", "contrôler", "curieux", "dispositif", "fameux", "financier", "grec", "ingénieur", "laboratoire", "lancement", "libéral", "lutter", "olympique", "patient", "prévenir", "remplir", "rupture", "solidarité", "supporter", "supprimer", "temple", "transition", "amélioration", "ange", "bouger", "bouteille", "considérer", "engager", "favorable", "folle", "fortune", "horreur", "introduction", "manche", "montage", "morceau", "navire", "océan", "perspective", "piscine", "présidence", "rappel", "résolution", "signature", "symbole", "tension", "thèse", "ventre", "voler", "écrivain", "équivalent", "abri", "combattre", "culte", "digne", "disparition", "dépôt", "fidèle", "industriel", "installation", "intégration", "jury", "odeur", "pitié", "poésie", "priorité", "probable", "ramener", "richesse", "sensible", "totalité", "actrice", "comédie", "corruption", "crème", "extension", "folie", "forum", "garantie", "honnête", "hypothèse", "indépendant", "licence", "manquer", "parallèle", "précision", "prêtre", "sportif", "spécifique", "toit", "écart", "adulte", "contribution", "destruction", "diplôme", "enregistrement", "envoi", "espérer", "extraordinaire", "foyer", "fruit", "horrible", "humeur", "immigration", "inconnu", "innovation", "littéraire", "magique", "maintien", "mécanique", "publier", "remarquer", "remonter", "restauration", "romain", "suprême", "syndicat", "terminer", "transformation", "témoignage", "vainqueur", "évaluation", "évêque", "adaptation", "adjoint", "avenue", "calendrier", "cousin", "drame", "durable", "dynamique", "déplacement", "expert", "fermeture", "fondateur", "galerie", "indice", "interdiction", "major", "paie", "placer", "profond", "refaire", "réalisateur", "rédaction", "sauvage", "seuil", "signer", "solo", "supplémentaire", "visible", "visiter", "abandonner", "accent", "animation", "annoncer", "attirer", "bassin", "canon", "casser", "chapeau", "courrier", "destin", "diversité", "dizaine", "intermédiaire", "logiciel", "loup", "médical", "oncle", "parlementaire", "poète", "préciser", "stop", "équipement", "accéder", "apprentissage", "assistance", "atmosphère", "commerciale", "dimension", "défi", "effectuer", "facteur", "identifier", "intelligent", "justifier", "leçon", "limiter", "mystère", "orientation", "paquet", "pleurer", "pôle", "recette", "représenter", "retrait", "réception", "soldat", "amener", "aménagement", "atteinte", "autonomie", "autoroute", "chanter", "chanteur", "chevalier", "constater", "continent", "diable", "disparaître", "fleur", "fusion", "lecteur", "motif", "métal", "météo", "pauvreté", "possession", "refuser", "remplacement", "retenir", "répartition", "scandale", "taper", "titulaire", "équipage", "adversaire", "audience", "citer", "conséquent", "correspondant", "design", "documentaire", "explosion", "faculté", "indispensable", "investir", "joyeux", "magie", "modifier", "ordinaire", "paire", "poursuite", "promesse", "registre", "souffrir", "suppression", "tournage", "transformer", "alimentaire", "annuel", "apparence", "bénéfice", "clinique", "communiste", "concentration", "couteau", "fleuve", "gras", "hockey", "inscrire", "intervenir", "intégrer", "liaison", "marketing", "miroir", "paraître", "partenariat", "plateforme", "préfecture", "préfet", "renforcer", "référendum", "sensation", "support", "séparation", "émotion", "acquisition", "apprécier", "collègue", "désert", "frapper", "gloire", "héritage", "inférieur", "instruction", "latin", "livraison", "maillot", "marquer", "moto", "oiseau", "onze", "plate", "prière", "profession", "recrutement", "sauter", "signal", "villa", "volant", "éditeur", "accessible", "ambassadeur", "carbone", "cellule", "chantier", "chapelle", "comparer", "conservateur", "descendre", "familiale", "global", "horizon", "maritime", "mignon", "rayon", "saisir", "similaire", "subir", "tester", "transmission", "universitaire", "vertu", "accompagner", "adopter", "adoption", "assister", "baisser", "biais", "blessure", "bulletin", "candidature", "chant", "coach", "diriger", "dîner", "favoriser", "fiction", "financer", "fine", "forcer", "incapable", "lion", "marin", "massif", "nomination", "observer", "occupation", "opéra", "peintre", "sage", "session", "souffrance", "violent", "abbé", "acier", "amateur", "argument", "automatique", "cardinal", "chaude", "communiquer", "consulter", "définir", "fantastique", "géant", "producteur", "prévention", "reportage", "solaire", "sénateur", "tapis", "adapter", "affronter", "africain", "banlieue", "camion", "charbon", "compétence", "couvrir", "déplacer", "déposer", "entraîner", "fréquence", "instrument", "minuit", "nationalité", "nourrir", "relever", "rond", "ronde", "succession", "vaisseau", "volontaire", "voyager", "administratif", "avouer", "boulevard", "bénéficier", "chaise", "commandement", "conducteur", "confirmer", "conservation", "douceur", "emplacement", "exact", "exécutif", "four", "francophone", "inspiration", "livrer", "métropole", "observation", "parent", "patience", "piano", "scrutin", "stable", "tabac", "tissu", "uniforme", "variété", "énergétique", "éthique", "alternative", "baie", "basket", "carton", "chauffeur", "chimie", "comté", "diminuer", "distinction", "dépasser", "excellence", "exceptionnel", "exercer", "golf", "incident", "municipalité", "navigation", "norme", "opportunité", "parvenir", "photographe", "plaindre", "raisonnable", "rassemblement", "recueil", "remarquable", "remercier", "ressort", "réagir", "traverser", "tromper", "urbain", "utilisateur", "acide", "agression", "créateur", "débit", "défenseur", "effectif", "entourage", "expédition", "faciliter", "forfait", "formidable", "fumer", "inspecteur", "joint", "marier", "mentir", "merveilleux", "mince", "misère", "négatif", "pollution", "poulet", "programmation", "provoquer", "recul", "satisfait", "serveur", "signaler", "sixième", "suffisant", "survie", "taxi", "trait", "tribune", "élite", "abandon", "ambition", "aube", "bouton", "chair", "clan", "clip", "compromis", "compréhension", "diamètre", "exister", "maternelle", "modification", "poil", "remporter", "répéter", "souveraineté", "statistique", "universel", "utilité", "vocation", "égal", "accorder", "admettre", "affirmer", "apparaître", "assumer", "bail", "banc", "chanteuse", "civilisation", "colonne", "constante", "crier", "criminel", "danser", "domination", "dépression", "graphique", "gâteau", "intense", "joindre", "libérer", "malheur", "miracle", "motivation", "noble", "optique", "plafond", "procéder", "progression", "proportion", "rêver", "suspect", "trajet", "ultime", "veste", "vingtaine", "écologique", "éliminer", "évoluer", "appuyer", "bancaire", "climatique", "conclure", "contemporain", "dictionnaire", "durer", "décor", "délégation", "démission", "dénoncer", "escalier", "externe", "faiblesse", "fierté", "informer", "management", "manager", "originaire", "parking", "permanence", "portugais", "poule", "promouvoir", "propagande", "préserver", "quai", "robot", "récent", "stratégique", "tirage", "abonnement", "accusation", "aile", "ampleur", "calmer", "clientèle", "conquête", "consultation", "curiosité", "célibataire", "descente", "dépit", "employeur", "fontaine", "fuir", "guitare", "habitation", "instance", "interdire", "location", "logo", "lâcher", "menu", "mécanisme", "parfum", "prévoir", "qualification", "rendement", "révolutionnaire", "soigner", "stabilité", "vapeur", "vendeur", "épée", "architecte", "centaine", "coalition", "combinaison", "concentrer", "contacter", "diagnostic", "dragon", "décrire", "démontrer", "familial", "flash", "gain", "imagination", "jambe", "légal", "législation", "mesurer", "monument", "prestation", "provisoire", "psychologique", "réveiller", "satisfaction", "surveiller", "séparer", "tarif", "évaluer", "altitude", "amuser", "anonyme", "arrestation", "assise", "bloquer", "brut", "cardiaque", "carrefour", "citation", "confort", "congé", "cuir", "directrice", "dirigeant", "encourager", "fonctionner", "intéresser", "invitation", "malheureux", "masculin", "monstre", "romaine", "romantique", "rugby", "survivre", "symbolique", "synthèse", "traditionnel", "acquérir", "aperçu", "autonome", "baron", "barrage", "béton", "canard", "cathédrale", "cirque", "commander", "compagnon", "confusion", "contribuer", "dignité", "diminution", "délit", "esthétique", "garantir", "identique", "louer", "marchand", "maréchal", "médiatique", "mépris", "prononcer", "relatif", "reproduction", "rigueur", "réparer", "républicain", "satisfaire", "suspension", "tendre", "troupe", "asile", "assaut", "bourgeois", "canton", "chimique", "condamnation", "connexion", "dramatique", "déclarer", "démonstration", "expansion", "fiscal", "foie", "ignorer", "imaginaire", "intensité", "laver", "perception", "permanent", "protocole", "préférence", "renseignement", "rouler", "roux", "stock", "sévère", "sûreté", "touristique", "variable", "vengeance", "écologie", "édifice", "absolu", "afficher", "cimetière", "constituer", "constructeur", "district", "déficit", "démocrate", "désigner", "fauteuil", "fragile", "garage", "géographique", "junior", "largeur", "miel", "mobilisation", "modeste", "négocier", "opérateur", "panneau", "pension", "piège", "plaire", "pratiquer", "prisonnier", "psychologie", "remboursement", "répression", "réveil", "saut", "septième", "tante", "temporaire", "trimestre", "valable", "élevage", "étendue", "ambassade", "cesser", "chirurgie", "circonscription", "colonie", "communautaire", "correspondance", "entrepreneur", "explorer", "exploser", "fixer", "fièvre", "indiquer", "interprète", "librairie", "loyer", "mobilité", "noblesse", "porc", "portail", "pourcentage", "poème", "préalable", "réglementation", "résister", "taire", "valoir", "élever", "algérien", "biologique", "brevet", "brun", "constitutionnel", "continu", "contrainte", "débarrasser", "emporter", "entretenir", "envisager", "exemplaire", "gang", "initiale", "matinée", "maîtresse", "mineur", "nerveux", "neutre", "opposer", "pantalon", "pasteur", "popularité", "portefeuille", "poster", "pouce", "provenance", "refuge", "reposer", "révision", "schéma", "sincère", "trio", "tristesse", "écho", "abbaye", "adieu", "analyser", "antenne", "artillerie", "breton", "brigade", "charger", "clos", "compléter", "conscient", "consentement", "constat", "critiquer", "disposer", "douter", "extra", "gendarmerie", "généreux", "géographie", "individuel", "jaloux", "look", "manteau", "messe", "mixte", "moulin", "pari", "plomb", "renoncer", "rémunération", "réunir", "souverain", "surprenant", "susceptible", "tragédie", "transmettre", "transparence", "trophée", "étendre", "aborder", "administrateur", "briser", "clavier", "colonisation", "complot", "croissant", "densité", "détention", "détermination", "enjeu", "faillite", "globe", "génétique", "habitat", "historien", "identification", "immédiat", "invasion", "lapin", "marquis", "milliard", "musical", "mythe", "nettoyer", "négociation", "poussière", "problématique", "pétition", "qualifier", "ranger", "rechercher", "réparation", "révélation", "solidaire", "veuve", "échantillon", "adhésion", "agenda", "aire", "antique", "brûler", "bâton", "cage", "caractéristique", "chèque", "cigarette", "correct", "craindre", "deuil", "dépendance", "espérance", "façade", "fichier", "fusil", "goûter", "grandeur", "grossesse", "mental", "média", "offensive", "ouvrier", "oxygène", "pacte", "parquet", "pizza", "polonais", "prétendre", "pâte", "rapprocher", "rembourser", "renouvellement", "repartir", "sensibilité", "signification", "soviétique", "substance", "traduire", "tunnel", "virer", "électoral", "absent", "adresser", "annuler", "apport", "asseoir", "brésilien", "chouette", "collier", "consommateur", "corriger", "dégager", "embrasser", "entente", "examiner", "fidélité", "filière", "fonctionnaire", "hebdomadaire", "hygiène", "initial", "invention", "inviter", "laïcité", "lyonnais", "manga", "manifester", "monétaire", "observatoire", "ressenti", "régulier", "rénovation", "répertoire", "semblable", "soumettre", "sympathique", "terrestre", "absurde", "barrière", "chauffage", "chercheur", "confier", "consacrer", "considérable", "criminelle", "céder", "distinguer", "décoration", "enregistrer", "horaire", "huitième", "injuste", "inquiétude", "inventaire", "invisible", "label", "linguistique", "minorité", "mosquée", "mâle", "médicament", "nommer", "néerlandais", "pavillon", "plaine", "prêter", "régiment", "sagesse", "satellite", "solitude", "stockage", "testament", "transporter", "turc", "échanger", "accomplir", "amiral", "assiette", "audio", "cahier", "calculer", "certificat", "circulaire", "confirmation", "continuité", "dent", "dessert", "diplomatique", "discret", "effacer", "enseigner", "excuser", "exploiter", "filiale", "fêter", "golfe", "générique", "inflation", "interroger", "intégralité", "nette", "neveu", "notice", "paroisse", "poubelle", "prier", "prophète", "radical", "rater", "rejet", "requête", "répétition", "révéler", "solitaire", "suédois", "systématique", "trentaine", "typique", "verser", "allure", "animateur", "autrui", "aérien", "casino", "christianisme", "chéri", "clef", "confondre", "constant", "contenir", "conviction", "correction", "coton", "digital", "exploration", "fabricant", "fabriquer", "faune", "fibre", "hiérarchie", "héritier", "hôte", "idéologie", "illégal", "innocent", "maturité", "mètre", "métrage", "noyau", "paille", "panier", "promenade", "ressortir", "réaliste", "rétablir", "sain", "souligner", "successeur", "séminaire", "urgent", "verbe", "visibilité", "vocabulaire", "amendement", "anneau", "approcher", "chou", "coco", "comique", "couler", "célébrer", "diesel", "diffuser", "discrimination", "guise", "handicap", "harmonie", "ignorance", "illusion", "infection", "inspection", "malaise", "négative", "patrie", "payant", "pourri", "ressentir", "rumeur", "salade", "serment", "soif", "technologique", "tolérance", "volet", "éclairage", "éloigner", "étiquette", "adorable", "alternance", "boisson", "commissariat", "concevoir", "coordination", "détriment", "exclusion", "fiable", "fiscalité", "genou", "grandir", "livret", "maquillage", "nouveauté", "onde", "paragraphe", "pente", "permission", "porteur", "prudence", "rattraper", "respirer", "saisie", "trahison", "affection", "archevêque", "attribution", "avertissement", "causer", "charité", "chasseur", "coller", "colline", "complément", "conversion", "couloir", "estimation", "extrémité", "filet", "illustration", "majoritaire", "merveille", "nier", "quinzaine", "rassurer", "recommencer", "relief", "renvoyer", "rocher", "sacrifice", "sanction", "simplicité", "terreur", "tragique", "vain"];
+const LETTRES_WORDS=["PARTIE", "MOMENT", "HISTOIRE", "NOUVEAU", "TRAVAIL", "PRENDRE", "POLITIQUE", "METTRE", "MAISON", "FAMILLE", "PARLER", "BESOIN", "SAVOIR", "SOCIETE", "POUVOIR", "QUESTION", "RAISON", "GENERAL", "PARTIR", "DERNIER", "NOMBRE", "PASSER", "RAPPORT", "TROUVER", "GUERRE", "NIVEAU", "QUATRE", "SEMAINE", "SERVICE", "ACCORD", "ARTICLE", "DONNER", "PROBLEME", "PRESIDENT", "EXEMPLE", "SYSTEME", "POSSIBLE", "PROJET", "ARGENT", "MEILLEUR", "PUBLIC", "SAISON", "RETOUR", "SITUATION", "JOURNEE", "MANIERE", "ENFANT", "MINISTRE", "REGION", "SIMPLE", "DEUXIEME", "SEPTEMBRE", "SECURITE", "ANCIEN", "ANGLAIS", "EPOQUE", "JUILLET", "NOMBREUX", "PROPRE", "RENDRE", "DROITE", "OCTOBRE", "SIECLE", "SORTIR", "JANVIER", "ACTION", "CULTURE", "DIFFICILE", "MILIEU", "PRODUIT", "DIRECTION", "EMPLOI", "PERIODE", "CHANCE", "CONFIANCE", "CROIRE", "DECEMBRE", "LAISSER", "NOVEMBRE", "PLAISIR", "DEMAIN", "DEMANDER", "FORMATION", "ATTENTION", "ESPRIT", "INTERIEUR", "INTERET", "MOUVEMENT", "ORIGINE", "SORTIE", "AUTEUR", "FEVRIER", "JUSTICE", "LANGUE", "OCCASION", "QUALITE", "CHANGER", "FACILE", "RESTER", "SOURCE", "TROISIEME", "CAMPAGNE", "VALEUR", "NATIONAL", "PENSER", "PRESENT", "REPONSE", "RESEAU", "POSITION", "ACTIVITE", "AMERICAIN", "CHERCHER", "CREATION", "DEVENIR", "FONCTION", "NATURE", "ARRETER", "CHEMIN", "DIRECTEUR", "LIBERTE", "MARIAGE", "PRESENCE", "ECONOMIE", "BUREAU", "COMPAGNIE", "REALITE", "SOCIAL", "UTILISER", "OEUVRE", "DIMANCHE", "DEPART", "MAUVAIS", "NUMERO", "REGARDER", "SOLEIL", "ACHETER", "ATTENDRE", "MANGER", "PERDRE", "VICTOIRE", "VERITE", "DOMAINE", "PROCHE", "REPONDRE", "SUIVRE", "GAGNER", "HONNEUR", "JOURNAL", "MATIERE", "RETROUVER", "RESULTAT", "SOIREE", "VERSION", "ARRIVER", "DEVOIR", "MISSION", "MOITIE", "TECHNIQUE", "ENERGIE", "EVITER", "CONTRAIRE", "COURANT", "ENTENDRE", "FINALE", "HEUREUX", "JOUEUR", "PORTER", "SAMEDI", "SECOND", "SERIEUX", "TERRAIN", "EGLISE", "DECISION", "DEFENSE", "INSTANT", "MAJORITE", "MODELE", "OBTENIR", "SOLUTION", "COMMUNE", "CONTRAT", "AVENIR", "DISCOURS", "MAITRE", "PERSONNEL", "PREUVE", "PRISON", "VENDREDI", "EDUCATION", "APPRENDRE", "ENDROIT", "ESSAYER", "LUMIERE", "REGIME", "ARRIERE", "COMMENCER", "MONTRER", "PHYSIQUE", "QUARTIER", "UNIQUE", "CONNAITRE", "LETTRE", "PAROLE", "PRINCIPE", "PROCHAIN", "EDITION", "ASSURER", "CARRIERE", "COMMUN", "COULEUR", "ERREUR", "ESPECE", "FAIBLE", "MINISTERE", "OBJECTIF", "RELATION", "RESPECT", "SECTEUR", "SOUTIEN", "TOMBER", "CONCOURS", "GESTION", "NORMAL", "OUVERTURE", "VILLAGE", "COMBAT", "COMITE", "CONTINUER", "MEMOIRE", "REVENIR", "CINEMA", "EXPLIQUER", "GARDER", "INDUSTRIE", "MALADIE", "MILITAIRE", "MEDECIN", "PERMETTRE", "VOULOIR", "CHANSON", "OPERATION", "VISAGE", "VERITABLE", "ECRIRE", "ENVOYER", "PARFAIT", "TRANSPORT", "VITESSE", "ETRANGER", "DOSSIER", "HOPITAL", "OUVRIR", "PRESSION", "PUISSANCE", "RELIGION", "THEATRE", "VOLONTE", "EVOLUTION", "OUBLIER", "PAUVRE", "REGARD", "SCIENCE", "ABSENCE", "BLANCHE", "CAPABLE", "HABITUDE", "PRINCIPAL", "SECRET", "EMISSION", "CHINOIS", "CLASSIQUE", "CONTACT", "DIRECT", "DIVERS", "MALADE", "PROCES", "RAPIDE", "REUNION", "TABLEAU", "TENDANCE", "HUMAIN", "SURFACE", "VENDRE", "VICTIME", "ELECTION", "EPISODE", "ALLEMAND", "AVOCAT", "BONHEUR", "BUDGET", "CARACTERE", "CHOISIR", "COMPTER", "DECOUVRIR", "LENDEMAIN", "POPULAIRE", "PRINCE", "PROVINCE", "RENTRER", "REVENU", "SUPERIEUR", "SURPRISE", "CAPACITE", "CENTRALE", "CONTEXTE", "EXTERIEUR", "HAUTEUR", "NAISSANCE", "RECEVOIR", "SERVIR", "ACTUEL", "CANDIDAT", "CAPITAINE", "CAPITALE", "EUROPEEN", "FAVEUR", "PAPIER", "PRESENTER", "TRIBUNAL", "ACCIDENT", "COURAGE", "ENTRER", "FESTIVAL", "IDENTITE", "MOINDRE", "PARCOURS", "PROTEGER", "REMETTRE", "VIOLENCE", "APPELER", "BEAUTE", "DANGER", "FOOTBALL", "MERCREDI", "MOURIR", "OPINION", "PLANETE", "QUEBECOIS", "RETARD", "THEORIE", "ARTISTE", "ASSURANCE", "AUTORITE", "CONTENT", "CELEBRE", "ENTIER", "EXTREME", "LECTURE", "MODERNE", "PROPRIETE", "QUITTER", "QUOTIDIEN", "TRISTE", "ENORME", "ATTEINDRE", "CATEGORIE", "CONTENU", "DOMMAGE", "ESPOIR", "EXISTENCE", "OFFRIR", "RELIGIEUX", "SECTION", "SPECTACLE", "APPAREIL", "CHATEAU", "CREDIT", "EMPECHER", "ENTRETIEN", "JEUNESSE", "METHODE", "NATUREL", "SILENCE", "VISION", "DOCTEUR", "RAPPELER", "REJOINDRE", "ECOUTER", "AJOUTER", "CAPITAL", "CHEVAL", "CLIENT", "DANGEREUX", "DEFENDRE", "EXERCICE", "LOGIQUE", "MONTER", "REPRENDRE", "REVOIR", "REALISER", "SENTIMENT", "STATUT", "SELECTION", "VIVANT", "COLLEGE", "DOMICILE", "EXAMEN", "MOTEUR", "OFFICIEL", "PARTAGER", "PATRON", "PREPARER", "REDUCTION", "SOUVENIR", "TENTER", "BATIMENT", "CERVEAU", "CONCEPT", "LANCER", "MATERIEL", "QUATRIEME", "REACTION", "REDUIRE", "SENTIR", "SOURIRE", "TOURNER", "ALCOOL", "BATTRE", "DIFFERENT", "INTENTION", "JARDIN", "MONDIAL", "SEANCE", "URGENCE", "ACCEPTER", "AMELIORER", "CANCER", "COMPLET", "CONCERT", "IMPACT", "METIER", "PROFITER", "SAUVER", "SCOLAIRE", "SPECIAL", "EVENEMENT", "ACCUEIL", "CADEAU", "COLERE", "CONDITION", "DORMIR", "EXCELLENT", "HASARD", "LONGUEUR", "MINIMUM", "NUMERIQUE", "SECOURS", "SOMMET", "ACTEUR", "AUGMENTER", "CHAMPION", "EFFICACE", "GARCON", "SOUTENIR", "ECHELLE", "AEROPORT", "DEFAUT", "ENFANCE", "HOMMAGE", "HUMANITE", "LOGEMENT", "MAXIMUM", "PROCEDURE", "PRODUIRE", "PROXIMITE", "STATION", "STRATEGIE", "VOLUME", "EGALITE", "CHOMAGE", "CLAIRE", "DIVISION", "EFFORT", "MANDAT", "MONTAGNE", "MEDECINE", "PHENOMENE", "PRECEDENT", "AMOUREUX", "ANIMAL", "BATEAU", "CABINET", "DOULEUR", "ESPAGNOL", "OFFICE", "PROFIT", "RETOURNER", "APPORTER", "CLIMAT", "CONFLIT", "ESSENTIEL", "EXCEPTION", "FRONTIERE", "GRATUIT", "MOBILE", "OCCUPER", "QUANTITE", "AMBIANCE", "CENTRAL", "DESSIN", "DEFAITE", "NATION", "RIVIERE", "SALAIRE", "TOUCHER", "TRENTE", "VERIFIER", "ECRITURE", "EPREUVE", "CHALEUR", "CONDUITE", "DISCUTER", "DETAIL", "HUMOUR", "LEGENDE", "MAGASIN", "RECOURS", "REFLEXION", "TRADITION", "ELEMENT", "ALLIANCE", "ASPECT", "ENNEMI", "INUTILE", "MAINTENIR", "PASSION", "PROFIL", "PROPOSER", "RECORD", "REMPLACER", "RESPECTER", "CANADIEN", "CONDUIRE", "COUCHER", "GENTIL", "JAPONAIS", "JUGEMENT", "MARCHER", "MONNAIE", "NUCLEAIRE", "PRIMAIRE", "AMITIE", "ENCEINTE", "LANGAGE", "ORIGINAL", "PLATEAU", "RECUPERER", "RESIDENCE", "TALENT", "TOURISME", "TRAITER", "DOCUMENT", "EMPEREUR", "ITALIEN", "OPTION", "POLICIER", "PROMOTION", "REGLEMENT", "SCENARIO", "SPECIALE", "CAISSE", "COLLECTIF", "COUPER", "EXPRIMER", "FERMER", "MAIRIE", "MANUEL", "MILLION", "ORGANISME", "PRINCESSE", "PROUVER", "PUISSANT", "RETIRER", "REFLECHIR", "FENETRE", "FORMER", "FOURNIR", "IMAGINER", "TERRIBLE", "ETABLIR", "ACTUALITE", "AGREABLE", "AVANCER", "DECIDER", "FORMAT", "GENIAL", "INSTALLER", "MAGAZINE", "PLAINTE", "PORTABLE", "PORTRAIT", "REUSSIR", "SUPERBE", "ATTITUDE", "BATTERIE", "COLONEL", "DIFFUSION", "ESSENCE", "IMPOSER", "NORMALE", "POISSON", "REGLER", "EVIDENT", "AUTOMNE", "CHOCOLAT", "EXTRAIT", "FEDERAL", "IMMENSE", "IMMEUBLE", "INTERVIEW", "SEJOUR", "TRANSFERT", "VIGUEUR", "CALCUL", "DISQUE", "DECRET", "ENLEVER", "MORALE", "OFFICIER", "PRENOM", "SOLIDE", "TENTATIVE", "VALLEE", "AGRICOLE", "APPLIQUER", "ATTAQUER", "CIRCUIT", "COURIR", "DEJEUNER", "INDIVIDU", "MENTION", "ORGANISER", "STUDIO", "TRAFIC", "VOISIN", "ETUDIER", "BILLET", "CACHER", "COUPABLE", "CULTUREL", "CEREMONIE", "DETRUIRE", "GARDIEN", "MAJEUR", "NOTION", "PARDON", "RACONTER", "RELEVE", "SOMMEIL", "ATELIER", "CINQUIEME", "CONSERVER", "JURIDIQUE", "LEADER", "MUNICIPAL", "POSITIF", "PROCUREUR", "PETROLE", "CITOYEN", "DRAPEAU", "POTENTIEL", "POUSSER", "SONDAGE", "STANDARD", "TRESOR", "EVIDENCE", "BOURSE", "EXECUTION", "PAIEMENT", "PARISIEN", "PUBLICITE", "QUINZE", "REGIONAL", "RESOUDRE", "REUSSITE", "SOURIS", "TEMOIN", "ECHAPPER", "BALLON", "CAMERA", "CONTROLER", "CURIEUX", "FAMEUX", "FINANCIER", "INGENIEUR", "LANCEMENT", "LIBERAL", "LUTTER", "OLYMPIQUE", "PATIENT", "PREVENIR", "REMPLIR", "RUPTURE", "SUPPORTER", "SUPPRIMER", "TEMPLE", "BOUGER", "BOUTEILLE", "ENGAGER", "FAVORABLE", "FORTUNE", "HORREUR", "MANCHE", "MONTAGE", "MORCEAU", "NAVIRE", "PISCINE", "RAPPEL", "SIGNATURE", "SYMBOLE", "TENSION", "VENTRE", "ECRIVAIN", "COMBATTRE", "FIDELE", "POESIE", "PRIORITE", "PROBABLE", "RAMENER", "RICHESSE", "SENSIBLE", "TOTALITE", "ACTRICE", "COMEDIE", "EXTENSION", "FEMININ", "GARANTIE", "HONNETE", "HYPOTHESE", "LICENCE", "MANQUER", "PARALLELE", "PRECISION", "PRETRE", "SPORTIF", "ADULTE", "DIPLOME", "ESPERER", "HORRIBLE", "HUMEUR", "INCONNU", "MAGIQUE", "MAINTIEN", "MECANIQUE", "PUBLIER", "REMARQUER", "REMONTER", "ROMAIN", "SUPREME", "SYNDICAT", "TERMINER", "VAINQUEUR", "EVEQUE", "ADJOINT", "AVENUE", "COUSIN", "DURABLE", "DYNAMIQUE", "EXPERT", "FERMETURE", "FONDATEUR", "GALERIE", "INDICE", "PLACER", "PROFOND", "REFAIRE", "REDACTION", "SAUVAGE", "SIGNER", "VISIBLE", "VISITER", "ACCENT", "ANIMATION", "ANNONCER", "ATTIRER", "BASSIN", "CASSER", "CHAPEAU", "COURRIER", "DESTIN", "DIVERSITE", "DIZAINE", "LOGICIEL", "MEDICAL", "PRECISER", "ACCEDER", "DIMENSION", "EFFECTUER", "FACTEUR", "JUSTIFIER", "LIMITER", "MYSTERE", "PAQUET", "PLEURER", "RECETTE", "RETRAIT", "RECEPTION", "SOLDAT", "AMENER", "ATTEINTE", "AUTONOMIE", "AUTOROUTE", "CHANTER", "CHANTEUR", "CHEVALIER", "CONSTATER", "CONTINENT", "DIABLE", "FUSION", "LECTEUR", "PAUVRETE", "REFUSER", "RETENIR", "SCANDALE", "TITULAIRE", "EQUIPAGE", "AUDIENCE", "DESIGN", "EXPLOSION", "FACULTE", "INVESTIR", "JOYEUX", "MODIFIER", "ORDINAIRE", "POURSUITE", "PROMESSE", "REGISTRE", "SOUFFRIR", "TOURNAGE", "ANNUEL", "APPARENCE", "BENEFICE", "CLINIQUE", "COUTEAU", "FLEUVE", "HOCKEY", "INSCRIRE", "INTEGRER", "LIAISON", "MARKETING", "MIROIR", "PARAITRE", "PREFET", "RENFORCER", "SENSATION", "SUPPORT", "EMOTION", "APPRECIER", "COLLEGUE", "DESERT", "FRAPPER", "GLOIRE", "HERITAGE", "INFERIEUR", "LIVRAISON", "MAILLOT", "MARQUER", "OISEAU", "PRIERE", "SAUTER", "SIGNAL", "VOLANT", "EDITEUR", "CARBONE", "CELLULE", "CHANTIER", "CHAPELLE", "COMPARER", "DESCENDRE", "FAMILIALE", "GLOBAL", "HORIZON", "MARITIME", "MIGNON", "SAISIR", "SIMILAIRE", "TESTER", "ADOPTER", "ADOPTION", "ASSISTER", "BAISSER", "BLESSURE", "BULLETIN", "DIRIGER", "FAVORISER", "FICTION", "FINANCER", "FORCER", "INCAPABLE", "MASSIF", "OBSERVER", "PEINTRE", "SESSION", "VIOLENT", "AMATEUR", "ARGUMENT", "CARDINAL", "CHAUDE", "CONSULTER", "DEFINIR", "REPORTAGE", "SOLAIRE", "SENATEUR", "ADAPTER", "AFFRONTER", "AFRICAIN", "BANLIEUE", "CAMION", "CHARBON", "COUVRIR", "DEPLACER", "DEPOSER", "ENTRAINER", "FREQUENCE", "MINUIT", "NOURRIR", "RELEVER", "VAISSEAU", "VOYAGER", "AVOUER", "BOULEVARD", "CHAISE", "CONFIRMER", "DOUCEUR", "EXECUTIF", "LIVRER", "METROPOLE", "PARENT", "PATIENCE", "SCRUTIN", "STABLE", "UNIFORME", "VARIETE", "ETHIQUE", "BASKET", "CARTON", "CHAUFFEUR", "CHIMIE", "DIMINUER", "DEPASSER", "EXERCER", "INCIDENT", "PARVENIR", "PLAINDRE", "RECUEIL", "REMERCIER", "RESSORT", "REAGIR", "TRAVERSER", "TROMPER", "URBAIN", "AGRESSION", "CREATEUR", "DEFENSEUR", "EFFECTIF", "ENTOURAGE", "FACILITER", "FORFAIT", "MARIER", "MENTIR", "MISERE", "NEGATIF", "POLLUTION", "POULET", "PROVOQUER", "SATISFAIT", "SERVEUR", "SIGNALER", "SIXIEME", "SUFFISANT", "SURVIE", "TRIBUNE", "ABANDON", "AMBITION", "BOUTON", "COMPROMIS", "DIAMETRE", "EXISTER", "REMPORTER", "REPETER", "UNIVERSEL", "UTILITE", "VOCATION", "ACCORDER", "ADMETTRE", "AFFIRMER", "ASSUMER", "CHANTEUSE", "COLONNE", "CONSTANTE", "CRIMINEL", "DANSER", "GRAPHIQUE", "GATEAU", "INTENSE", "JOINDRE", "LIBERER", "MALHEUR", "MIRACLE", "OPTIQUE", "PLAFOND", "PROCEDER", "SUSPECT", "TRAJET", "ULTIME", "VINGTAINE", "ELIMINER", "EVOLUER", "APPUYER", "BANCAIRE", "CONCLURE", "DEMISSION", "DENONCER", "ESCALIER", "EXTERNE", "FAIBLESSE", "FIERTE", "INFORMER", "MANAGER", "PARKING", "PORTUGAIS", "PRESERVER", "RECENT", "SOUDAIN", "TIRAGE", "AMPLEUR", "CALMER", "CLIENTELE", "CONQUETE", "CURIOSITE", "DESCENTE", "EMPLOYEUR", "FONTAINE", "GUITARE", "INSTANCE", "INTERDIRE", "LOCATION", "LACHER", "MECANISME", "PARFUM", "PREVOIR", "RENDEMENT", "SOIGNER", "STABILITE", "VAPEUR", "VENDEUR", "CENTAINE", "COALITION", "CONTACTER", "DRAGON", "DECRIRE", "DEMONTRER", "FAMILIAL", "MESURER", "MONUMENT", "REVEILLER", "SEPARER", "EVALUER", "ALTITUDE", "AMUSER", "ANONYME", "ASSISE", "BLOQUER", "CARDIAQUE", "CARREFOUR", "CITATION", "CONFORT", "DIRIGEANT", "MASCULIN", "MONSTRE", "ROMAINE", "SURVIVRE", "SYNTHESE", "ACQUERIR", "APERCU", "AUTONOME", "BARRAGE", "CANARD", "CIRQUE", "COMMANDER", "COMPAGNON", "CONFUSION", "DIGNITE", "GARANTIR", "IDENTIQUE", "MARCHAND", "MARECHAL", "MEPRIS", "PRONONCER", "RELATIF", "RIGUEUR", "REPARER", "TENDRE", "TROUPE", "ASSAUT", "BOURGEOIS", "CANTON", "CHIMIQUE", "CONNEXION", "DECLARER", "EXPANSION", "FISCAL", "IGNORER", "INTENSITE", "PERMANENT", "PROTOCOLE", "ROULER", "SEVERE", "SURETE", "VARIABLE", "VENGEANCE", "ECOLOGIE", "EDIFICE", "ABSOLU", "AFFICHER", "CANAPE", "CIMETIERE", "DISTRICT", "DEFICIT", "DEMOCRATE", "DESIGNER", "FAUTEUIL", "FRAGILE", "GARAGE", "JUNIOR", "LARGEUR", "MODESTE", "NEGOCIER", "OPERATEUR", "PANNEAU", "PENSION", "PLAIRE", "PRATIQUER", "REVEIL", "SEPTIEME", "TRIMESTRE", "VALABLE", "ELEVAGE", "ETENDUE", "AMBASSADE", "CESSER", "CHIRURGIE", "COLONIE", "EXPLORER", "EXPLOSER", "FIEVRE", "INDIQUER", "LIBRAIRIE", "MOBILITE", "NOBLESSE", "PORTAIL", "PREALABLE", "RESISTER", "VALOIR", "ELEVER", "ALGERIEN", "BREVET", "CONTINU", "EMPORTER", "ENVISAGER", "INITIALE", "MATINEE", "MAITRESSE", "MINEUR", "NERVEUX", "NEUTRE", "OPPOSER", "PANTALON", "PASTEUR", "POSTER", "REFUGE", "REPOSER", "REVISION", "SCHEMA", "SINCERE", "TRISTESSE", "ABBAYE", "ANALYSER", "ANTENNE", "BRETON", "BRIGADE", "CHARGER", "COMPLETER", "CONSCIENT", "CONSTAT", "CRITIQUER", "DISPOSER", "DOUTER", "GENEREUX", "JALOUX", "MANTEAU", "MOULIN", "RENONCER", "REUNIR", "SOUVERAIN", "TRAGEDIE", "TROPHEE", "ETENDRE", "ABORDER", "BRISER", "CLAVIER", "COMPLOT", "CROISSANT", "DENSITE", "DETENTION", "FAILLITE", "GENETIQUE", "HABITAT", "HISTORIEN", "IMMEDIAT", "INVASION", "MARQUIS", "MILLIARD", "MUSICAL", "NETTOYER", "POUSSIERE", "PETITION", "QUALIFIER", "RANGER", "SOLIDAIRE", "ADHESION", "AGENDA", "ANTIQUE", "BRULER", "CHEQUE", "CIGARETTE", "CORRECT", "CRAINDRE", "ESPERANCE", "FACADE", "FICHIER", "GOUTER", "GRANDEUR", "GROSSESSE", "MENTAL", "OFFENSIVE", "OUVRIER", "OXYGENE", "PARQUET", "POLONAIS", "PRETENDRE", "REPARTIR", "SUBSTANCE", "TRADUIRE", "TUNNEL", "ELECTORAL", "ABSENT", "ADRESSER", "ANNULER", "APPORT", "ASSEOIR", "BRESILIEN", "CHOUETTE", "COLLIER", "CORRIGER", "DEGAGER", "EMBRASSER", "ENTENTE", "EXAMINER", "FIDELITE", "FILIERE", "HYGIENE", "INITIAL", "INVENTION", "INVITER", "LAICITE", "LYONNAIS", "MONETAIRE", "RESSENTI", "REGULIER", "SEMBLABLE", "SOUMETTRE", "TERRESTRE", "ABSURDE", "BARRIERE", "CHAUFFAGE", "CHERCHEUR", "CONFIER", "CONSACRER", "HORAIRE", "HUITIEME", "INJUSTE", "INVISIBLE", "MINORITE", "MOSQUEE", "NOMMER", "PAVILLON", "PLAINE", "PRETER", "REGIMENT", "SAGESSE", "SATELLITE", "SOLITUDE", "STOCKAGE", "TESTAMENT", "ECHANGER", "ACCOMPLIR", "AMIRAL", "ASSIETTE", "CAHIER", "CALCULER", "DESSERT", "DISCRET", "EFFACER", "ENSEIGNER", "EXCUSER", "EXPLOITER", "FILIALE", "GENERIQUE", "INFLATION", "NOTICE", "PAROISSE", "POUBELLE", "PROPHETE", "RADICAL", "REQUETE", "REVELER", "SOLITAIRE", "SUEDOIS", "TRENTAINE", "TYPIQUE", "VERSER", "ALLURE", "ANIMATEUR", "AUTRUI", "AERIEN", "CASINO", "CONFONDRE", "CONSTANT", "CONTENIR", "DIGITAL", "FABRICANT", "FABRIQUER", "HERITIER", "IDEOLOGIE", "ILLEGAL", "INNOCENT", "MATURITE", "METRAGE", "PAILLE", "PANIER", "PROMENADE", "RESSORTIR", "REALISTE", "RETABLIR", "SOULIGNER", "SEMINAIRE", "URGENT", "ANNEAU", "APPROCHER", "COMIQUE", "COULER", "CELEBRER", "DIESEL", "DIFFUSER", "HANDICAP", "HARMONIE", "IGNORANCE", "ILLUSION", "INFECTION", "MALAISE", "NEGATIVE", "PATRIE", "PAYANT", "POURRI", "RESSENTIR", "RUMEUR", "SALADE", "SERMENT", "TOLERANCE", "ECLAIRAGE", "ELOIGNER", "ETIQUETTE", "ADORABLE", "BOISSON", "CONCEVOIR", "DETRIMENT", "EXCLUSION", "FIABLE", "FISCALITE", "GRANDIR", "LIVRET", "NOUVEAUTE", "PORTEUR", "PRUDENCE", "RATTRAPER", "RESPIRER", "SAISIE", "TRAHISON", "AFFECTION", "CAUSER", "CHARITE", "CHASSEUR", "COLLER", "COLLINE", "COULOIR", "EXTREMITE", "MERVEILLE", "QUINZAINE", "RASSURER", "RELIEF", "RENVOYER", "ROCHER", "SACRIFICE", "SANCTION", "TERREUR", "TRAGIQUE", "EPAISSEUR", "EVASION", "APPETIT", "ARRACHER", "COMPTABLE", "DOLLAR", "EXCLUSIF", "FRANCHIR", "INQUIETER", "INVENTER", "MAXIMALE", "PARTIEL", "PARTIELLE", "PODIUM", "SERPENT", "SPECTRE", "TACTIQUE", "VIOLATION", "ETERNEL", "AVIATION", "CAUCHEMAR", "CERTITUDE", "CHASSER", "DICTATURE", "DELICIEUX", "DEPENSER", "EMPRUNTER", "ESTOMAC", "HUMIDE", "INTEGRITE", "IRLANDAIS", "MARATHON", "ORGANE", "PASSEPORT", "PHARMACIE", "PLACEMENT", "RACHAT", "RECLAMER", "SANITAIRE", "TICKET", "TIMIDE", "URBANISME", "BONHOMME", "CONJOINT", "CONTENTER", "COREEN", "MANUSCRIT", "MOBILIER", "PRIVILEGE", "REPORTER", "SCOLARITE", "SOUHAITER", "THEORIQUE", "VAINCRE", "CAMPING", "CAUTION", "COHERENCE", "COMMETTRE", "CONSOMMER", "COURAGEUX", "DOUZAINE", "DECENNIE", "EMMENER", "ENTITE", "FANTOME", "FLAMME", "FLECHE", "GLISSER", "MONARCHIE", "MUSICIEN", "OBLIGER", "OBSTACLE", "OPERER", "REGRETTER", "SONORE", "SPHERE", "SYNDROME", "SEDUIRE", "TABLETTE", "VEILLER", "EPOUSER", "ASCENSEUR", "ATHLETE", "ATTACHER", "BIOLOGIE", "BONNET", "BOUCHER", "DECEPTION", "DECLIN", "EXPOSER", "FAVORI", "HEROINE", "INFINI", "MOTION", "POSSEDER", "PERIMETRE", "RAPPORTER", "SAUVETAGE", "VAISSELLE", "VETEMENT", "ETEINDRE", "ARBITRAGE", "CARNET", "COMPAGNE", "COUVENT", "CRISTAL", "CRITERE", "CREATURE", "EXECUTER", "FEMINISTE", "HABILLER", "HABITUEL", "INNOCENCE", "JALOUSIE", "MANNEQUIN", "ORGANIQUE", "PORTION", "PROCURER", "PRUDENT", "REPORT", "RESERVOIR", "SOUHAIT", "THERMIQUE", "VEDETTE", "EPIDEMIE", "ALUMINIUM", "ASSOCIER", "CLAUSE", "COMMENTER", "CROYANCE", "CREDIBLE", "DOMINANTE", "DELICAT", "FEMELLE", "GERANT", "INSTINCT", "INTEGRALE", "IRONIE", "MENSUEL", "NETTOYAGE", "POTABLE", "POTEAU", "POETIQUE", "PRESTIGE", "RACHETER", "RECRUTER", "REMEDE", "ROTATION", "ROUTINE", "SEMESTRE", "SERGENT", "TCHEQUE", "TEMOIGNER", "UNANIMITE", "VENGER", "ETROITE", "AMBITIEUX", "ASCENSION", "BASEBALL", "CANDIDATE", "COMPLICE", "CROYANT", "CYCLISTE", "DESSINER", "DIAMANT", "DEFINITIF", "DETRESSE", "EMPRUNT", "GROTTE", "HUMIDITE", "IMPULSION", "MAROCAIN", "MAITRISER", "MULTITUDE", "NAITRE", "PLANCHER", "RAJOUTER", "SPIRITUEL", "SURNOM", "SYNONYME", "EVOQUER", "ACCROITRE", "ALLUSION", "BLOCAGE", "BRACELET", "CAMARADE", "CAVALERIE", "COMPOSER", "CROISER", "DEVINER", "DIOCESE", "DECALAGE", "EXPLOIT", "FLUIDE", "INJECTION", "INTIMITE", "ISOLEMENT", "LOCATAIRE", "MONASTERE", "PARDONNER", "PENIBLE", "REPOUSSER", "ROMPRE", "ROUTIERE", "SERRER", "THEOLOGIE", "TOURNOIS", "AMICAL", "ATTRAPER", "AUDITION", "CABINE", "CASSATION", "CASTING", "COMBLER", "COMPENSER", "ENTREVUE", "ESTIMER", "GRAMMAIRE", "GRENIER", "GUERIR", "IMPRIMER", "INJUSTICE", "JUNGLE", "MAGISTRAT", "MENTALITE", "MONOPOLE", "MORTALITE", "MORTEL", "MUTUELLE", "PEINDRE", "REGRET", "RENVERSER", "VACCIN", "EMERGENCE", "ALIMENTER", "AUTORISER", "BANQUIER", "BLESSER", "COIFFURE", "CREUSER", "DIRECTIVE", "DISPUTER", "DOCTORAT", "HOSTILE", "INSPIRER", "INEDIT", "MOUTON", "MUTATION", "NOTORIETE", "OBTENTION", "PROMENER", "REPROCHER", "ROUTIER", "SCULPTURE", "VOLEUR", "ECLATER", "EQUATION", "ETERNITE", "ABOUTIR", "ACCELERER", "CHAUSSURE", "CIRCULER", "COCHON", "COMPTEUR", "CONDAMNER", "DEBATTRE", "DETOUR", "EXIGER", "FONDRE", "FOUDRE", "GAULOIS", "GENANT", "MYTHIQUE", "NEUVIEME", "NOTAIRE", "PARCOURIR", "PELOUSE", "PLACARD", "PREJUDICE", "REBELLION", "REDACTEUR", "RESERVER", "SLOGAN", "VARIATION", "VIOLET", "VIRAGE", "ECRASER", "ABOLITION", "ACCUSER", "ADMIRER", "ARRANGER", "ATTRIBUER", "AUBERGE", "DEMARRER", "ETHNIQUE", "FILMER", "FONDER", "HABITER", "HUMBLE", "INQUIET", "INTERFACE", "LITTORAL", "MEETING", "PLANTER", "PROLONGER", "PENINSULE", "PENETRER", "RELANCER", "RITUEL", "SENTIER", "THERAPIE", "TRIANGLE", "EQUITABLE", "BATAILLON", "BOUQUET", "CESSION", "COMEDIEN", "COUTER", "CUISINER", "DEESSE", "DEMENAGER", "DESASTRE", "DESESPOIR", "DETENTE", "IMPASSE", "INSERTION", "LOISIR", "LUMINEUX", "NOCTURNE", "PAPILLON", "REFLET", "RENARD", "RIDEAU", "RESIDENT", "SACRIFIER", "SEGMENT", "SHOPPING", "TERMINAL", "VISUEL", "ACCROCHER", "ACHETEUR", "ARMEMENT", "AUSTERITE", "BANNIERE", "BAPTEME", "BOUCLIER", "CHEVRE", "CITRON", "COMPTOIR", "COMTESSE", "CROISIERE", "DIXIEME", "DUCHESSE", "DESACCORD", "ENTRAIN", "ENVERGURE", "EXPULSION", "FONDEMENT", "IMMUNITE", "OUVRIERE", "PARRAIN", "PIQUER", "REJETER", "RISQUER", "SINGLE", "SOULEVER", "TROTTOIR", "TUTELLE", "VAMPIRE", "VARIER", "ECLAIR", "ALLUMER", "BATTUE", "CHAUFFER", "CHAUVE", "CONCRET", "CONVOI", "COPIER", "DAUPHIN", "FAMILIER", "FREQUENT", "GALAXIE", "GUERRIER", "INCLURE", "INDIENNE", "LEVIER", "MARTEAU", "PASSAGER", "RAPPEUR", "RECULER", "REPERER", "STOPPER", "VALIDER", "VOYAGEUR", "ECOSSAIS", "ABATTRE", "ADMISSION", "BASQUE", "CARNAVAL", "CHANCEUX", "CUISSON", "DETENDRE", "ENRICHIR", "HONTEUX", "HYDROGENE", "NOSTALGIE", "NOTABLE", "PASSIF", "PISTOLET", "PLONGER", "POURVOIR", "PRECIEUSE", "PUNITION", "SAVEUR", "SOMMAIRE", "SUPPOSER", "SYMPATHIE", "TATOUAGE", "ELEGANCE", "EVACUER", "AFFICHAGE", "AFFREUX", "ALEATOIRE", "ARGENTIN", "BALCON", "BETISE", "CONVERTIR", "CELESTE", "DANOIS", "DETECTER", "EMPLOYER", "FIXATION", "GENERER", "HESITER", "INCITER", "INDEMNITE", "MAIGRE", "MENTON", "NATATION", "OBSCURITE", "PARTISAN", "POSTURE", "PRECOCE", "REVIVRE", "RESUMER", "SANDWICH", "ETONNER", "ALLIER", "ARCHIPEL", "BALANCER", "CLERGE", "CONQUERIR", "COUTUME", "CRAYON", "DOUBLER", "DEFUNT", "DETOURNER", "EXCLUSIVE", "EXIGENCE", "EXTRAIRE", "HONORABLE", "LOCALITE", "MANIPULER", "MISSILE", "PILULE", "RENOUVEAU", "RENTABLE", "SALUER", "SURMONTER", "TIREUR", "VOISINAGE", "ACHEVER", "CAVALIER", "CONTRER", "DIVISER", "DECISIF", "DESORDRE", "EMPRISE", "EXCLURE", "FURIEUX", "GUERISON", "HONNETETE", "IMPERIAL", "MATURE", "MATERIAU", "OPTIMISTE", "PERCER"];
+const BADWORDS=new Set(["salope", "merde", "putain", "connard", "conne", "bite", "couille", "couilles", "enculé", "nique", "niquer", "pute", "putes", "chier", "bordel", "salaud", "pédé", "nègre", "gouine", "branler", "branleur", "chatte", "enfoiré", "foutre", "meuf", "gonzesse", "pétasse", "garce", "cochonne", "blondasse", "bimbo", "nympho", "nichons", "zob", "teub", "porno", "pouffiasse", "poufiasse", "grognasse", "salopard", "tapette", "tafiole", "bougnoule", "négro", "youpin", "bicot", "raton", "connerie", "bâtard", "cul"]);
+
+/* ---------- Outils communs aux jeux ---------- */
+function seededShuffle(arr, seed){
+  const a=[...arr]; let x=seed;
+  const rnd=()=>{ x|=0; x=x+0x6D2B79F5|0; let t=Math.imul(x^x>>>15,1|x); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+const atDay = (list,n) => list[((n-1)%list.length+list.length)%list.length];
+function gStats(key){ return Object.assign({games:0,wins:0,guessSum:0,best:null,hist:{},streak:0,lastWin:null}, lsGet(key,{})); }
+function recordResult(key, daily, won, count){
+  const s=gStats(key);
+  if(daily){
+    if(s.hist[daily.date]) return s;
+    s.hist[daily.date]={won,count};
+    if(won){ s.streak = s.lastWin===dayBefore(daily.date) ? s.streak+1 : 1; s.lastWin=daily.date; } else s.streak=0;
+  }
+  s.games++;
+  if(won){ s.wins++; s.guessSum+=count; s.best=s.best==null?count:Math.min(s.best,count); }
+  lsSet(key,s); return s;
+}
+async function shareText(txt, box){
+  try{ if(navigator.share){ await navigator.share({text:txt}); return; } }catch(e){ if(e && e.name==="AbortError") return; }
+  try{ await navigator.clipboard.writeText(txt); box.replaceChildren(); const ok=document.createElement("span"); ok.className="okline"; ok.textContent="Résultat copié : colle-le où tu veux."; box.append(ok); box.hidden=false; return; }catch(e){}
+  box.replaceChildren(); const ta=document.createElement("textarea"); ta.readOnly=true; ta.value=txt;
+  const lb=document.createElement("span"); lb.className="note"; lb.textContent="Copie ce texte pour partager ton résultat :";
+  box.append(lb,ta); box.hidden=false; ta.focus(); ta.select();
+}
+function endBanner(el, {title, lines, primary, onPrimary, onShare, extra}){
+  el.hidden=false; el.className="banner"; el.replaceChildren();
+  const msg=document.createElement("div"); msg.className="msg";
+  msg.append(...title);
+  for(const l of lines||[]){ const s=document.createElement("small"); s.textContent=l; msg.append(s); }
+  if(extra) msg.append(extra);
+  const btns=document.createElement("div"); btns.className="btns";
+  const p=document.createElement("button"); p.className="btn primary"; p.type="button"; p.textContent=primary; p.onclick=onPrimary;
+  const sh=document.createElement("button"); sh.className="btn"; sh.type="button"; sh.textContent="Partager mon résultat";
+  const box=document.createElement("div"); box.className="sharebox"; box.hidden=true;
+  sh.onclick=()=>onShare(box);
+  btns.append(p,sh); el.append(msg,btns,box);
+  return p;
+}
+function strongText(t){ const s=document.createElement("strong"); s.textContent=t; return s; }
+function waitVec(el){
+  if(VEC) return true;
+  el.innerHTML = VEC_FAILED
+    ? '<span class="warnline">Ce jeu a besoin du fichier <b>vecteurs.bin</b>, placé à côté de index.html sur le site en ligne.</span>'
+    : "Chargement du dictionnaire (7 Mo)…";
+  return false;
+}
+const CHAUD_ORDER = seededShuffle(CHAUD_WORDS, 777001);
+const LETTRES_ORDER = seededShuffle(LETTRES_WORDS, 424242);
+const upNorm = s => norm(s).toUpperCase();
+
+/* ---------- Chaud-froid (façon Cémantix) ---------- */
+const Chaud = {
+  st:null, si:-1, ranks:null, top:[],
+  key(){ return PLAYS.chaud==="daily" ? "caviarde.chaud.daily" : "caviarde.chaud.free"; },
+  boot(){
+    $("cBanner").hidden=true;
+    if(!waitVec($("cFb"))){ $("cBody").replaceChildren(); $("cLast").replaceChildren(); return; }
+    const saved=lsGet(this.key(),null);
+    if(PLAYS.chaud==="daily"){
+      const d=todayInfo();
+      if(saved && saved.daily?.date===d.date && vecIndex(saved.secret)>=0) this.load(saved);
+      else this.load({secret:atDay(CHAUD_ORDER,d.n), daily:d, guesses:[], done:false, won:false});
+    }else{
+      if(saved && vecIndex(saved.secret)>=0) this.load(saved); else this.fresh();
+    }
+  },
+  fresh(){
+    const played=lsGet("caviarde.chaud.played",[]);
+    const today=atDay(CHAUD_ORDER,todayInfo().n);
+    let pool=CHAUD_WORDS.filter(w=>!played.includes(w) && w!==today);
+    if(!pool.length){ lsSet("caviarde.chaud.played",[]); pool=CHAUD_WORDS.filter(w=>w!==today); }
+    const w=pool[Math.floor(Math.random()*pool.length)];
+    played.push(w); lsSet("caviarde.chaud.played",played);
+    this.load({secret:w, daily:null, guesses:[], done:false, won:false});
+    $("cFb").textContent="Nouveau mot secret. Bonne chasse !";
+  },
+  load(st){
+    this.st=st;
+    this.si=vecIndex(st.secret);
+    const n=VEC.n, sims=new Float32Array(n);
+    for(let i=0;i<n;i++) sims[i]=cosine(this.si,i);
+    const idx=new Uint32Array(n); for(let i=0;i<n;i++) idx[i]=i;
+    const order=Array.from(idx).sort((a,b)=>sims[b]-sims[a]).slice(0,1001);
+    this.ranks=new Map(); order.forEach((w,pos)=>this.ranks.set(w,1000-pos));
+    this.top=order.slice(1).filter(i=>!BADWORDS.has(VEC.words[i])).slice(0,10);
+    this.sims=sims;
+    if(!st.done) $("cFb").textContent = st.guesses.length ? "Partie reprise." : (st.daily ? `Mot du jour n°${st.daily.n} : le même pour tout le monde aujourd'hui.` : "Trouvez le mot secret.");
+    this.save(); this.render();
+  },
+  save(){ lsSet(this.key(), this.st); },
+  icon(g){
+    if(g.win) return "🥳";
+    if(g.p>=990) return "🔥";
+    if(g.p>=900) return "🥵";
+    if(g.p>=1) return "😎";
+    return g.t<0 ? "🧊" : "🥶";
+  },
+  submit(raw){
+    const st=this.st; if(!st || st.done) return;
+    const m=raw.trim().toLowerCase().match(WORD_RE); if(!m) return;
+    const word=m[0], i=vecIndex(word);
+    if(i<0){ $("cFb").innerHTML=`Je ne connais pas <b>« ${esc(word)} »</b>. Essayez une autre orthographe ou un autre mot (non compté).`; return; }
+    const prev=st.guesses.find(g=>g.i===i);
+    if(prev){ $("cFb").innerHTML=`<b>« ${esc(VEC.words[i])} »</b> a déjà été proposé (n°${prev.n}).`; this.render(prev.n); return; }
+    const g={n:st.guesses.length+1, i, w:VEC.words[i], t:Math.round(this.sims[i]*10000)/100, p:this.ranks.get(i)||0, win:i===this.si};
+    st.guesses.push(g); st.last=g.n;
+    if(g.win){ this.finish(true); return; }
+    $("cFb").innerHTML=`<b>« ${esc(g.w)} »</b> : ${g.t.toFixed(2).replace(".",",")} °C ${this.icon(g)}${g.p?` · ${g.p} ‰`:""}`;
+    this.save(); this.render();
+  },
+  finish(won){
+    const st=this.st; st.done=true; st.won=won;
+    recordResult("caviarde.chaud.stats", st.daily, won, st.guesses.length);
+    this.save(); this.render();
+    if(won){ $("cFb").innerHTML=`<b>Bravo !</b> Mot trouvé en ${plural(st.guesses.length,"coup")}.`; fireworks(); }
+    else $("cFb").innerHTML=`Le mot était <b>« ${esc(st.secret)} »</b>.`;
+    window.scrollTo({top:0,behavior:reduceMotion()?"auto":"smooth"});
+  },
+  row(g, flash){
+    const tr=document.createElement("tr"); if(g.win) tr.className="win"; else if(flash) tr.className="flash";
+    const c=(cls,txt)=>{ const td=document.createElement("td"); if(cls) td.className=cls; td.textContent=txt; tr.append(td); return td; };
+    c("num",g.n); c("word",g.w); c("num",g.t.toFixed(2).replace(".",",")); c("ico",this.icon(g));
+    const td=document.createElement("td");
+    if(g.p){ const pr=document.createElement("div"); pr.className="prog"; const pb=document.createElement("div"); pb.className="pb"; const i=document.createElement("i"); i.style.width=(g.p/10)+"%"; pb.append(i); const s=document.createElement("span"); s.textContent=g.p+" ‰"; pr.append(pb,s); td.append(pr); }
+    tr.append(td); return tr;
+  },
+  render(flashN){
+    const st=this.st; if(!st) return;
+    $("meta").textContent=(st.daily?"Chaud-froid du jour n°"+st.daily.n:"Chaud-froid")+" · "+plural(st.guesses.length,"coup");
+    const last=st.guesses.find(g=>g.n===st.last);
+    $("cLast").replaceChildren(...(last&&!st.done?[this.row(last)]:[]));
+    const sorted=[...st.guesses].sort((a,b)=>b.t-a.t);
+    $("cBody").replaceChildren(...sorted.map(g=>this.row(g, g.n===flashN)));
+    $("cEmpty").hidden=st.guesses.length>0;
+    $("cInput").disabled=st.done; $("cGive").hidden=st.done;
+    const s=gStats("caviarde.chaud.stats");
+    $("cGames").textContent=s.games; $("cWins").textContent=s.wins; $("cAvg").textContent=s.wins?Math.round(s.guessSum/s.wins):"–"; $("cStreak").textContent=s.streak;
+    if(!st.done){ $("cBanner").hidden=true; return; }
+    const close=document.createElement("div"); close.className="closest";
+    for(const i of this.top){ const sp=document.createElement("span"); sp.textContent=VEC.words[i]; close.append(sp); }
+    const lab=document.createElement("small"); lab.textContent="Les mots les plus proches :";
+    const wrap=document.createElement("div"); wrap.append(lab,close);
+    endBanner($("cBanner"),{
+      title: st.won?["Trouvé en "+plural(st.guesses.length,"coup")+" : ",strongText(st.secret),"."]:["Le mot était : ",strongText(st.secret),"."],
+      lines: st.daily?[`Prochain mot du jour (n°${st.daily.n+1}) demain à minuit.`]:[],
+      extra: wrap,
+      primary: st.daily?"Jouer en illimité":"Mot suivant",
+      onPrimary: ()=>{ if(st.daily) switchMode("free"); else { this.fresh(); $("cInput").focus(); } },
+      onShare: box=>{
+        const cnt={}; for(const g of st.guesses){ const k=this.icon(g); cnt[k]=(cnt[k]||0)+1; }
+        const em=["🔥","🥵","😎","🥶","🧊"].filter(k=>cnt[k]).map(k=>k+" "+cnt[k]).join("  ");
+        const head = st.daily ? `Chaud-froid du jour n°${st.daily.n}` : "Chaud-froid";
+        const txt = `${head} : ${st.won?"trouvé en "+plural(st.guesses.length,"coup")+" 🥳":"abandon après "+plural(st.guesses.length,"coup")}\n${em}\n${location.origin+location.pathname}`;
+        shareText(txt, box);
+      }
+    });
+  }
+};
+$("cForm").addEventListener("submit",e=>{ e.preventDefault(); const v=$("cInput").value; $("cInput").value=""; Chaud.submit(v); });
+let cGiveArmed=null;
+$("cGive").addEventListener("click",()=>{
+  const b=$("cGive");
+  if(!Chaud.st || Chaud.st.done) return;
+  if(!cGiveArmed){ b.textContent="Confirmer l'abandon"; b.className="btn warn"; cGiveArmed=setTimeout(()=>{ cGiveArmed=null; b.textContent="Abandonner et voir le mot"; b.className="btn quiet"; },3500); return; }
+  clearTimeout(cGiveArmed); cGiveArmed=null; b.textContent="Abandonner et voir le mot"; b.className="btn quiet";
+  Chaud.finish(false);
+});
+
+/* ---------- Lettres (façon Sutom) ---------- */
+const MAXTRY = 6;
+const Lettres = {
+  st:null, cur:"", typedFirst:false, busy:false, valid:null,
+  key(){ return PLAYS.lettres==="daily" ? "caviarde.lettres.daily" : "caviarde.lettres.free"; },
+  buildValid(){
+    if(this.valid) return;
+    const v=new Set(LETTRES_WORDS);
+    const add=w=>{ const u=upNorm(w); if(u.length>=6 && u.length<=9 && /^[A-Z]+$/.test(u)) v.add(u); };
+    VEC.words.forEach(add);
+    if(LEX){ LEX.lem.forEach((l,f)=>add(f)); LEX.lemv.forEach(add); }
+    this.valid=v;
+  },
+  boot(){
+    $("lBanner").hidden=true;
+    if(!waitVec($("lFb"))){ $("lGrid").replaceChildren(); $("lKb").replaceChildren(); return; }
+    this.buildValid();
+    const saved=lsGet(this.key(),null);
+    if(PLAYS.lettres==="daily"){
+      const d=todayInfo();
+      if(saved && saved.daily?.date===d.date) this.load(saved);
+      else this.load({target:atDay(LETTRES_ORDER,d.n), daily:d, rows:[], done:false, won:false});
+    }else{
+      if(saved && saved.target) this.load(saved); else this.fresh();
+    }
+  },
+  fresh(){
+    const played=lsGet("caviarde.lettres.played",[]);
+    const today=atDay(LETTRES_ORDER,todayInfo().n);
+    let pool=LETTRES_WORDS.filter(w=>!played.includes(w) && w!==today);
+    if(!pool.length){ lsSet("caviarde.lettres.played",[]); pool=LETTRES_WORDS.filter(w=>w!==today); }
+    const w=pool[Math.floor(Math.random()*pool.length)];
+    played.push(w); lsSet("caviarde.lettres.played",played);
+    this.load({target:w, daily:null, rows:[], done:false, won:false});
+  },
+  load(st){
+    this.st=st; this.cur=st.target[0]; this.typedFirst=false;
+    $("lFb").textContent = st.done ? "" : (st.daily?`Mot du jour n°${st.daily.n} : ${st.target.length} lettres, commence par ${st.target[0]}.`:`Nouveau mot : ${st.target.length} lettres, commence par ${st.target[0]}.`);
+    this.save(); this.render();
+  },
+  save(){ lsSet(this.key(), this.st); },
+  score(guess, target){
+    const res=Array(guess.length).fill("no"), left={};
+    for(let i=0;i<target.length;i++){ if(guess[i]===target[i]) res[i]="ok"; else left[target[i]]=(left[target[i]]||0)+1; }
+    for(let i=0;i<guess.length;i++){ if(res[i]!=="ok" && left[guess[i]]>0){ res[i]="mid"; left[guess[i]]--; } }
+    return res;
+  },
+  known(){ // lettres bien placées déjà trouvées
+    const t=this.st.target, k=Array(t.length).fill(""); k[0]=t[0];
+    for(const r of this.st.rows) this.score(r,t).forEach((s,i)=>{ if(s==="ok") k[i]=t[i]; });
+    return k;
+  },
+  key2(ch){
+    const st=this.st; if(!st || st.done || this.busy) return;
+    const L=st.target.length;
+    if(ch==="⌫"){ if(this.cur.length>1) this.cur=this.cur.slice(0,-1); if(this.cur.length===1) this.typedFirst=false; this.renderGrid(); return; }
+    if(ch==="↵"){ this.enter(); return; }
+    if(!/^[A-Z]$/.test(ch)) return;
+    if(this.cur.length===1 && !this.typedFirst && ch===st.target[0]){ this.typedFirst=true; return; }
+    this.typedFirst=true;
+    if(this.cur.length<L){ this.cur+=ch; this.renderGrid(); }
+  },
+  enter(){
+    const st=this.st, L=st.target.length;
+    if(this.cur.length<L){ this.msg(`Il manque des lettres : le mot en fait ${L}.`, true); return; }
+    if(!this.valid.has(this.cur)){ this.msg(`« ${this.cur} » n'est pas dans le dictionnaire.`, true); return; }
+    st.rows.push(this.cur);
+    const guess=this.cur; this.cur=st.target[0]; this.typedFirst=false;
+    const won=guess===st.target, lost=!won && st.rows.length>=MAXTRY;
+    this.save();
+    this.busy=true;
+    this.render(st.rows.length-1);
+    const delay=reduceMotion()?0:L*110+300;
+    setTimeout(()=>{
+      this.busy=false;
+      if(won||lost){
+        st.done=true; st.won=won;
+        recordResult("caviarde.lettres.stats", st.daily, won, st.rows.length);
+        this.save(); this.render();
+        if(won){ this.msg(`Bravo ! Trouvé en ${plural(st.rows.length,"essai")}.`); fireworks(); }
+        else this.msg(`Perdu, le mot était ${st.target}.`);
+      }else this.msg(`Essai ${st.rows.length}/${MAXTRY}.`);
+    }, delay);
+  },
+  msg(t, bad){
+    $("lFb").textContent=t;
+    if(bad){ const row=$("lGrid").children[this.st.rows.length]; if(row){ row.classList.remove("shake"); void row.offsetWidth; row.classList.add("shake"); } }
+  },
+  renderGrid(flipRow){
+    const st=this.st, L=st.target.length, g=$("lGrid");
+    g.style.setProperty("--n",L);
+    const k=this.known();
+    const rows=[];
+    for(let r=0;r<MAXTRY;r++){
+      const row=document.createElement("div"); row.className="lrow"; row.style.setProperty("--n",L);
+      const done=r<st.rows.length, isCur=r===st.rows.length && !st.done;
+      const sc=done?this.score(st.rows[r],st.target):null;
+      for(let i=0;i<L;i++){
+        const c=document.createElement("div"); c.className="lcell";
+        if(done){ c.textContent=st.rows[r][i]; c.classList.add(sc[i]); if(r===flipRow && !reduceMotion()){ c.classList.add("flip"); c.style.animationDelay=(i*110)+"ms"; } }
+        else if(isCur){
+          if(i<this.cur.length){ c.textContent=this.cur[i]; c.classList.add("typed"); }
+          else if(k[i]){ c.textContent=k[i]; c.classList.add("hint"); }
+          else c.textContent="·", c.classList.add("hint");
+        }
+        row.append(c);
+      }
+      rows.push(row);
+    }
+    g.replaceChildren(...rows);
+  },
+  renderKb(){
+    const st=this.st, state={};
+    const rank={no:1,mid:2,ok:3};
+    for(const r of st.rows) this.score(r,st.target).forEach((s,i)=>{ const ch=r[i]; if(!state[ch] || rank[s]>rank[state[ch]]) state[ch]=s; });
+    const layout=["AZERTYUIOP","QSDFGHJKLM","⌫WXCVBN↵"];
+    const kb=$("lKb"); kb.replaceChildren();
+    for(const line of layout){
+      const r=document.createElement("div"); r.className="kbr";
+      for(const ch of line){
+        const b=document.createElement("button"); b.type="button"; b.tabIndex=-1; b.textContent=ch==="↵"?"Entrée":ch==="⌫"?"⌫":ch; b.dataset.k=ch;
+        if(ch==="↵"||ch==="⌫"){ b.className="wide"; b.setAttribute("aria-label",ch==="↵"?"Valider":"Effacer"); }
+        else if(state[ch]) b.className=state[ch];
+        r.append(b);
+      }
+      kb.append(r);
+    }
+  },
+  render(flipRow){
+    const st=this.st; if(!st) return;
+    $("meta").textContent=(st.daily?"Lettres du jour n°"+st.daily.n:"Lettres")+" · "+st.rows.length+"/"+MAXTRY;
+    this.renderGrid(flipRow); this.renderKb();
+    const s=gStats("caviarde.lettres.stats");
+    $("lGames").textContent=s.games; $("lWins").textContent=s.wins; $("lAvg").textContent=s.wins?(s.guessSum/s.wins).toFixed(1).replace(".",","):"–"; $("lStreak").textContent=s.streak;
+    if(!st.done){ $("lBanner").hidden=true; return; }
+    const p=endBanner($("lBanner"),{
+      title: st.won?["Trouvé en "+plural(st.rows.length,"essai")+" : ",strongText(st.target),"."]:["Le mot était : ",strongText(st.target),"."],
+      lines: st.daily?[`Prochain mot du jour (n°${st.daily.n+1}) demain à minuit.`]:[],
+      primary: st.daily?"Jouer en illimité":"Mot suivant",
+      onPrimary: ()=>{ if(st.daily) switchMode("free"); else this.fresh(); },
+      onShare: box=>{
+        const em={ok:"🟥",mid:"🟡",no:"🟦"};
+        const grid=st.rows.map(r=>this.score(r,st.target).map(s=>em[s]).join("")).join("\n");
+        const head=st.daily?`Lettres du jour n°${st.daily.n}`:"Lettres";
+        shareText(`${head} : ${st.won?st.rows.length:"X"}/${MAXTRY}\n${grid}\n${location.origin+location.pathname}`, box);
+      }
+    });
+  }
+};
+$("lKb").addEventListener("click",e=>{ const b=e.target.closest("button"); if(b){ b.blur(); Lettres.key2(b.dataset.k); } });
+document.addEventListener("keydown",e=>{
+  if(GAME!=="lettres" || e.ctrlKey || e.metaKey || e.altKey) return;
+  if(e.target.closest("input,textarea")) return;
+  if(e.key==="Enter"){ if(e.target.closest("#lBanner")) return; e.preventDefault(); Lettres.key2("↵"); }
+  else if(e.key==="Backspace"){ e.preventDefault(); Lettres.key2("⌫"); }
+  else if(e.key.length===1){ const u=upNorm(e.key); if(/^[A-Z]$/.test(u)) Lettres.key2(u); }
+});
+
 /* ---------- Démarrage ---------- */
 loadVectors();
+document.querySelectorAll(".games button").forEach(b=>b.addEventListener("click",()=>switchGame(b.dataset.g)));
 $("mDaily").addEventListener("click",()=>switchMode("daily"));
 $("mFree").addEventListener("click",()=>switchMode("free"));
 boot();
