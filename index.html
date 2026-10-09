@@ -285,9 +285,12 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
 .pdot.lost{background:var(--abs);border-color:var(--abs);color:var(--abs-ink)}
 .pcard{display:flex;align-items:center;gap:18px;padding:18px 20px;border:1.5px solid var(--ink);border-radius:12px;background:var(--surface)}
 .pemo{font-size:3.4rem;line-height:1;flex:none}
+.pemo.photo{width:5.5rem;height:5.5rem;display:grid;place-items:center;background:#FFFFFF;border-radius:8px;overflow:hidden}
+.pemo.photo img{max-width:100%;max-height:100%;object-fit:contain}
 .ptxt{min-width:0}
 .pname{font-family:var(--f-read);font-weight:600;font-size:1.3rem;line-height:1.3;text-wrap:balance}
 .pdet{color:var(--ink-2);font-size:.95rem;margin-top:3px}
+.pstats .note a{color:inherit}
 .psrc{color:var(--ink-2);font:500 .72rem var(--f-num);letter-spacing:.02em;margin-top:8px}
 .prange{display:flex;align-items:center;gap:8px}
 .prange .pb{font:500 .95rem var(--f-num);font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
@@ -497,7 +500,7 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
       <div><dt>Essais en moyenne</dt><dd id="pAvg">–</dd></div>
       <div><dt>Série du jour</dt><dd id="pStreak">0</dd></div>
     </dl>
-    <p class="note">Le prix est trouvé à 2 % près (à 5 centimes près sous 10 €). Ce sont de vrais produits, avec leur prix en ligne relevé sur carrefour.fr et boulanger.com le 9 octobre 2026 : les prix ont pu changer depuis.</p>
+    <p class="note">Le prix est trouvé à 2 % près (à 5 centimes près sous 10 €). En illimité, les produits viennent au hasard d'<a href="https://prices.openfoodfacts.org" target="_blank" rel="noopener">Open Prices</a>, des prix relevés en magasin par la communauté Open Food Facts (données sous licence ODbL, photos sous CC BY-SA), et d'un relevé de prix en ligne sur carrefour.fr et boulanger.com du 9 octobre 2026. Le juste prix du jour vient de ce relevé. Les prix ont pu changer depuis.</p>
   </section>
 </main>
 
@@ -1743,34 +1746,103 @@ const fmtEur = v => (Number.isInteger(v) ? v : Math.round(v*100)/100).toLocaleSt
 const fmtExact = fmtEur;
 function prixOk(g, p){ return p<10 ? Math.abs(g-p) < 0.051 : Math.abs(g-p) <= Math.max(0.5, p*0.02); }
 
+/* Produits aléatoires : Open Prices (Open Food Facts) */
+const OP_API="https://prices.openfoodfacts.org/api/v1";
+const OpenPrices = {
+  locs:null,
+  async locations(){
+    if(this.locs) return this.locs;
+    const cached=lsGet("caviarde.op.locs",null);
+    if(cached && Date.now()-cached.t < 7*86400000 && cached.l?.length){ this.locs=cached.l; return this.locs; }
+    const all=[];
+    for(let page=1; page<=6; page++){
+      const r=await fetch(`${OP_API}/locations?osm_address_country__like=France&price_count__gte=50&size=100&page=${page}`);
+      if(!r.ok) break;
+      const j=await r.json();
+      for(const l of j.items||[]) if(l.type==="OSM" && /france/i.test(l.osm_address_country||"")) all.push({id:l.id, n:l.osm_name||"un magasin", c:l.osm_address_city||"", p:l.price_count||50});
+      if(page>=(j.pages||1)) break;
+    }
+    if(!all.length) throw new Error("aucun magasin");
+    this.locs=all; lsSet("caviarde.op.locs",{t:Date.now(), l:all});
+    return all;
+  },
+  async random(){
+    const locs=await this.locations();
+    const seen=new Set(lsGet("caviarde.op.seen",[]));
+    for(let attempt=0; attempt<5; attempt++){
+      const loc=locs[Math.floor(Math.random()*locs.length)];
+      const pages=Math.max(1, Math.floor(loc.p/40));
+      const page=1+Math.floor(Math.random()*pages);
+      const q=`location_id=${loc.id}&type=PRODUCT&currency=EUR&price_is_discounted=false&product_id__isnull=false&date__gte=2024-07-01&size=40&page=${page}`;
+      let j=null;
+      try{ const r=await fetch(`${OP_API}/prices?${q}`); if(r.ok) j=await r.json(); }catch(e){}
+      const ok=(j?.items||[]).filter(it=>{
+        const p=it.product||{};
+        return it.price>0.2 && it.price<5000 && !it.price_per && p.product_name && String(p.product_name).trim().length>2 && !seen.has(it.id);
+      });
+      if(!ok.length) continue;
+      const it=ok[Math.floor(Math.random()*ok.length)], p=it.product;
+      seen.add(it.id); lsSet("caviarde.op.seen",[...seen].slice(-500));
+      const qty = p.product_quantity ? `${String(p.product_quantity).replace(".",",")}${p.product_quantity_unit?" "+p.product_quantity_unit:" g"}` : "";
+      const brand = (p.brands||"").split(",")[0].trim();
+      const date = it.date ? new Date(it.date+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}) : "";
+      return {
+        e:"🛒", img:p.image_url||"",
+        name: String(p.product_name).trim().replace(/^./,c=>c.toUpperCase()),
+        det: [brand, qty].filter(Boolean).join(" · "),
+        price: Math.round(it.price*100)/100,
+        src: `Prix relevé chez ${loc.n}${loc.c?" ("+loc.c+")":""}${date?" le "+date:""} · Open Prices`
+      };
+    }
+    throw new Error("aucun produit");
+  }
+};
+const fromList = i => { const [e,name,det,price,shop]=PRIX_ITEMS[i]; return {e, img:"", name, det, price, src:`Prix en ligne relevé sur ${PRIX_SHOPS[shop]||"le site du magasin"} le ${PRIX_DATE}`}; };
+
 const Prix = {
-  st:null,
-  key(){ return PLAYS.prix==="daily" ? "caviarde.prix2.daily" : "caviarde.prix2.free"; },
+  st:null, loading:false,
+  key(){ return PLAYS.prix==="daily" ? "caviarde.prix3.daily" : "caviarde.prix3.free"; },
   stats(){ return Object.assign({objets:0,trouves:0,essais:0,hist:{},streak:0,lastWin:null}, lsGet("caviarde.prix.stats",{})); },
+  todayIdx(){ const s=((todayInfo().n-1)*PRIX_DAY)%PRIX_ORDER.length; return Array.from({length:PRIX_DAY},(_,k)=>PRIX_ORDER[(s+k)%PRIX_ORDER.length]); },
   boot(){
     $("pBanner").hidden=true;
     const saved=lsGet(this.key(),null);
     if(PLAYS.prix==="daily"){
       const d=todayInfo();
-      if(saved && saved.daily?.date===d.date) this.load(saved);
-      else {
-        const start=((d.n-1)*PRIX_DAY)%PRIX_ORDER.length;
-        const list=Array.from({length:PRIX_DAY},(_,k)=>PRIX_ORDER[(start+k)%PRIX_ORDER.length]);
-        this.load({daily:d, list, cur:0, rounds:list.map(()=>({g:[],h:0,done:false,won:false})), over:false});
-      }
+      if(saved && saved.daily?.date===d.date && saved.items) this.load(saved);
+      else { const items=this.todayIdx().map(fromList); this.load({daily:d, items, cur:0, rounds:items.map(()=>({g:[],h:0,done:false,won:false})), over:false}); }
     }else{
-      if(saved && saved.list) this.load(saved); else this.fresh();
+      if(saved && saved.items) this.load(saved); else this.fresh();
     }
   },
-  fresh(){
-    const played=lsGet("caviarde.prix2.played",[]);
-    const today=new Set(Array.from({length:PRIX_DAY},(_,k)=>PRIX_ORDER[(((todayInfo().n-1)*PRIX_DAY)+k)%PRIX_ORDER.length]));
+  fromStatic(){
+    const played=lsGet("caviarde.prix3.played",[]);
+    const today=new Set(this.todayIdx());
     let pool=PRIX_ITEMS.map((_,i)=>i).filter(i=>!played.includes(i) && !today.has(i));
-    if(!pool.length){ lsSet("caviarde.prix2.played",[]); pool=PRIX_ITEMS.map((_,i)=>i).filter(i=>!today.has(i)); }
+    if(!pool.length){ lsSet("caviarde.prix3.played",[]); pool=PRIX_ITEMS.map((_,i)=>i).filter(i=>!today.has(i)); }
     const i=pool[Math.floor(Math.random()*pool.length)];
-    played.push(i); lsSet("caviarde.prix2.played",played);
-    this.load({daily:null, list:[i], cur:0, rounds:[{g:[],h:0,done:false,won:false}], over:false});
-    $("pFb").textContent="Nouvel objet : à combien l'estimez-vous ?";
+    played.push(i); lsSet("caviarde.prix3.played",played);
+    return fromList(i);
+  },
+  async fresh(){
+    if(this.loading) return;
+    this.loading=true;
+    this.showLoading();
+    let item=null, fallback=false;
+    // 2 fois sur 3 un produit Open Prices, 1 fois sur 3 un produit du relevé (tech, électroménager…)
+    if(Math.random()<2/3){ try{ item=await OpenPrices.random(); }catch(e){ fallback=true; } }
+    if(!item) item=this.fromStatic();
+    this.loading=false;
+    this.load({daily:null, items:[item], cur:0, rounds:[{g:[],h:0,done:false,won:false}], over:false});
+    $("pFb").textContent = fallback ? "Open Prices ne répond pas pour le moment : voici un produit du relevé Carrefour / Boulanger." : "Nouvel objet : à combien l'estimez-vous ?";
+  },
+  showLoading(){
+    $("pBanner").hidden=true; $("pDots").hidden=true;
+    $("pEmo").replaceChildren("🔎"); $("pName").textContent="Recherche d'un produit…"; $("pDet").textContent=""; $("pSrc").textContent="";
+    $("pInput").disabled=true; $("pGo").disabled=true; $("pHint").disabled=true;
+    $("pHist").replaceChildren(); $("pHints").hidden=true; $("pNext").replaceChildren();
+    $("pLo").textContent="0 €"; $("pHi").textContent="?"; $("pMid").textContent="?"; $("pMid").className="pmid";
+    $("pFb").textContent="Recherche d'un produit au hasard…";
   },
   load(st){
     this.st=st; this.save();
@@ -1779,7 +1851,7 @@ const Prix = {
     if(!st.over && !st.rounds[st.cur].done) setTimeout(()=>$("pInput")?.focus({preventScroll:true}),0);
   },
   save(){ lsSet(this.key(), this.st); },
-  item(){ return PRIX_ITEMS[this.st.list[this.st.cur]]; },
+  item(){ return this.st.items[this.st.cur]; },
   round(){ return this.st.rounds[this.st.cur]; },
   used(r){ return r.g.length + r.h; },
   bounds(r, p){
@@ -1788,12 +1860,12 @@ const Prix = {
     return {lo,hi};
   },
   submit(raw){
-    const st=this.st; if(!st || st.over) return;
+    const st=this.st; if(!st || st.over || this.loading) return;
     const r=this.round(); if(r.done) return;
     const v=parseFloat(String(raw).replace(/\s|€/g,"").replace(",","."));
     if(!isFinite(v) || v<=0 || v>1e8){ $("pFb").textContent="Tapez un prix en euros, par exemple 12 ou 3,50."; return; }
-    const p=this.item()[3];
-    const val = p<10 ? Math.round(v*100)/100 : Math.round(v*100)/100;
+    const p=this.item().price;
+    const val=Math.round(v*100)/100;
     if(r.g.some(g=>g.v===val)){ $("pFb").textContent=`Vous avez déjà proposé ${fmtExact(val)} (non compté).`; return; }
     const win=prixOk(val,p);
     r.g.push({v:val, d: win?0:(val<p?1:-1)});
@@ -1802,7 +1874,7 @@ const Prix = {
     this.after(r);
   },
   hint(){
-    const st=this.st; if(!st || st.over) return;
+    const st=this.st; if(!st || st.over || this.loading) return;
     const r=this.round(); if(r.done) return;
     if(r.h>=2){ $("pFb").textContent="Plus d'indice pour cet objet."; return; }
     r.h++;
@@ -1810,14 +1882,14 @@ const Prix = {
     this.after(r, true);
   },
   hintText(r){
-    const p=this.item()[3], ent=String(Math.floor(p));
+    const p=this.item().price, ent=String(Math.floor(p));
     const out=[];
     if(r.h>=1) out.push(p<1 ? "Le prix est inférieur à 1 €." : `Le prix a ${plural(ent.length,"chiffre")} avant la virgule.`);
     if(r.h>=2) out.push(p<1 ? `Il y a ${String(Math.round(p*100)).padStart(2,"0")[0]} dizaine(s) de centimes.` : `Il commence par ${ent[0]}.`);
     return out;
   },
   after(r, fromHint){
-    const st=this.st, p=this.item()[3], last=r.g[r.g.length-1];
+    const st=this.st, p=this.item().price, last=r.g[r.g.length-1];
     if(r.done){
       this.record(r);
       if(r.won) $("pFb").innerHTML=`<b>Le juste prix !</b> ${fmtExact(p)}, trouvé en ${plural(this.used(r),"essai")}.`;
@@ -1847,8 +1919,8 @@ const Prix = {
   },
   next(){
     const st=this.st;
-    if(st.daily){ if(st.cur<st.list.length-1){ st.cur++; this.save(); $("pFb").textContent=`Objet ${st.cur+1}/${st.list.length} : à combien l'estimez-vous ?`; this.render(); $("pInput").focus({preventScroll:true}); } }
-    else { this.fresh(); $("pInput").focus({preventScroll:true}); }
+    if(st.daily){ if(st.cur<st.items.length-1){ st.cur++; this.save(); $("pFb").textContent=`Objet ${st.cur+1}/${st.items.length} : à combien l'estimez-vous ?`; this.render(); $("pInput").focus({preventScroll:true}); } }
+    else { this.fresh().then(()=>$("pInput").focus({preventScroll:true})); }
   },
   share(box){
     const st=this.st, em=st.rounds.map(r=>r.won?`✅${this.used(r)}`:"❌").join(" ");
@@ -1857,23 +1929,25 @@ const Prix = {
     shareText(`${head}\n${em}\n${location.origin+location.pathname}`, box);
   },
   render(){
-    const st=this.st; if(!st) return;
-    const [emo,name,det,p,shop]=this.item(), r=this.round();
-    $("meta").textContent = (st.daily?`Juste prix du jour n°${st.daily.n} · objet ${st.cur+1}/${st.list.length}`:"Juste prix");
-    // progression du jour
+    const st=this.st; if(!st || this.loading) return;
+    const it=this.item(), r=this.round(), p=it.price;
+    $("meta").textContent = (st.daily?`Juste prix du jour n°${st.daily.n} · objet ${st.cur+1}/${st.items.length}`:"Juste prix");
     const dots=$("pDots"); dots.replaceChildren(); dots.hidden=!st.daily;
     if(st.daily) st.rounds.forEach((x,i)=>{ const s=document.createElement("span"); s.className="pdot"+(x.done?(x.won?" won":" lost"):"")+(i===st.cur?" cur":""); s.textContent=x.done?(x.won?this.used(x):"✕"):(i+1); s.title=`Objet ${i+1}`; dots.append(s); });
-    $("pEmo").textContent=emo; $("pName").textContent=name; $("pDet").textContent=det; $("pDet").hidden=!det;
-    $("pSrc").textContent=`Prix en ligne relevé sur ${PRIX_SHOPS[shop]||"le site du magasin"} le ${PRIX_DATE}`;
-    // fourchette
+    const emo=$("pEmo");
+    if(it.img){
+      const im=document.createElement("img"); im.src=it.img; im.alt=""; im.loading="lazy"; im.referrerPolicy="no-referrer";
+      im.onerror=()=>emo.replaceChildren(it.e||"🛒");
+      emo.replaceChildren(im); emo.classList.add("photo");
+    }else{ emo.replaceChildren(it.e||"🛒"); emo.classList.remove("photo"); }
+    $("pName").textContent=it.name; $("pDet").textContent=it.det; $("pDet").hidden=!it.det;
+    $("pSrc").textContent=it.src||"";
     const {lo,hi}=this.bounds(r,p);
     $("pLo").textContent = lo===null ? "0 €" : fmtEur(lo);
     $("pHi").textContent = hi===null ? "?" : fmtEur(hi);
     $("pMid").textContent = r.done ? fmtExact(p) : "?";
     $("pMid").className = "pmid"+(r.done?(r.won?" won":" lost"):"");
-    // indices
     const ht=this.hintText(r); $("pHints").replaceChildren(...ht.map(t=>{ const li=document.createElement("li"); li.textContent=t; return li; })); $("pHints").hidden=!ht.length;
-    // historique
     const ol=$("pHist"); ol.replaceChildren();
     [...r.g].reverse().forEach((g,k)=>{
       const li=document.createElement("li"); li.className=g.d===0?"win":(g.d>0?"up":"down");
@@ -1883,13 +1957,10 @@ const Prix = {
       li.append(n,v,t); ol.append(li);
     });
     $("pInput").disabled=r.done; $("pGo").disabled=r.done; $("pHint").disabled=r.done || r.h>=2;
-    // bouton objet suivant (mode du jour, en cours)
     const nx=$("pNext"); nx.replaceChildren();
-    if(st.daily && r.done && !st.over){ const b=document.createElement("button"); b.className="btn primary"; b.type="button"; b.textContent=`Objet suivant (${st.cur+2}/${st.list.length})`; b.onclick=()=>this.next(); nx.append(b); }
-    // stats
+    if(st.daily && r.done && !st.over){ const b=document.createElement("button"); b.className="btn primary"; b.type="button"; b.textContent=`Objet suivant (${st.cur+2}/${st.items.length})`; b.onclick=()=>this.next(); nx.append(b); }
     const s=this.stats();
     $("pObj").textContent=s.objets; $("pFound").textContent=s.trouves; $("pAvg").textContent=s.trouves?(s.essais/s.trouves).toFixed(1).replace(".",","):"–"; $("pStreak").textContent=s.streak;
-    // bandeau de fin
     if(!st.over){ $("pBanner").hidden=true; return; }
     const found=st.rounds.filter(x=>x.won).length;
     endBanner($("pBanner"),{
