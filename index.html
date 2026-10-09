@@ -260,12 +260,63 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
 .kb,.lgrid,.games,.modes{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 .ctable .tag,.gl .gw em.hint{font:500 .66rem var(--f-num);color:var(--near3);margin-left:6px;letter-spacing:.06em;text-transform:uppercase}
 .lkey .btn{padding:.45em .8em;font-size:.85rem}
+.ldiff{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 12px;max-width:34rem;text-align:center}
+.ldiff .note{font-size:.85rem}
+.seg{display:inline-flex;border:1px solid var(--ink);border-radius:7px;overflow:hidden}
+.seg button{font:600 .88rem/1 var(--f-ui);padding:.5em .9em;border:0;background:transparent;color:var(--ink);cursor:pointer;touch-action:manipulation}
+.seg button+button{border-left:1px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg button[data-d="hard"][aria-pressed="true"]{background:var(--heat3);color:#15181B}
+.seg button:focus-visible{outline:2px solid var(--pen);outline-offset:-3px}
 @media (max-width:420px){.guess .btn{padding:.62em .7em}}
 .kb button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
 .lstats{width:100%;max-width:34rem;margin-top:10px}
 .stats4{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media (max-width:480px){.stats4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){.lcell.flip,.lrow.shake{animation:none}}
+
+/* Juste prix */
+.pwrap{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;gap:14px;padding-block:22px 56px}
+.pwrap>*{width:100%;max-width:34rem}
+.pdots{display:flex;justify-content:center;gap:8px}
+.pdot{width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;font:600 .85rem var(--f-num);border:2px solid var(--rule);color:var(--ink-2)}
+.pdot.cur{border-color:var(--pen);color:var(--ink)}
+.pdot.won{background:var(--ok);border-color:var(--ok);color:#FFFFFF}
+.pdot.lost{background:var(--abs);border-color:var(--abs);color:var(--abs-ink)}
+.pcard{display:flex;align-items:center;gap:18px;padding:18px 20px;border:1.5px solid var(--ink);border-radius:12px;background:var(--surface)}
+.pemo{font-size:3.4rem;line-height:1;flex:none}
+.ptxt{min-width:0}
+.pname{font-family:var(--f-read);font-weight:600;font-size:1.3rem;line-height:1.3;text-wrap:balance}
+.pdet{color:var(--ink-2);font-size:.95rem;margin-top:3px}
+.prange{display:flex;align-items:center;gap:8px}
+.prange .pb{font:500 .95rem var(--f-num);font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
+.prange .pline{flex:1;height:2px;background:var(--rule);border-radius:1px}
+.pmid{font:700 1.25rem var(--f-mark);letter-spacing:.02em;padding:.25em .7em;border-radius:8px;background:var(--bar);color:var(--paper);white-space:nowrap}
+.pmid.won{background:var(--ok);color:#FFFFFF}
+.pmid.lost{background:var(--heat3);color:#15181B}
+.pguess{max-width:34rem}
+.pguess input{font-family:var(--f-num)}
+.pguess input::placeholder{font-family:var(--f-ui)}
+.pfb{text-align:center}
+.pleft{color:var(--ink-2);font-size:.9rem;margin-left:4px}
+.phints{list-style:none;margin:0;padding:10px 14px;border:1px dashed var(--rule);border-radius:8px;display:grid;gap:4px;font-size:.95rem}
+.phints li::before{content:"💡 "}
+#pNext{display:flex;justify-content:center}
+#pNext:empty{display:none}
+.phist{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule)}
+.phist li{display:grid;grid-template-columns:2rem minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:8px 4px;border-bottom:1px solid var(--rule)}
+.phist .pn{font:500 .78rem var(--f-num);color:var(--ink-2)}
+.phist .pv{font:500 1.05rem var(--f-num);font-variant-numeric:tabular-nums}
+.phist .pt{font-weight:600;font-size:.95rem}
+.phist li.up .pt{color:var(--pen)}
+.phist li.down .pt{color:var(--heat3)}
+.phist li.win .pt{color:var(--ok)}
+.phist li:first-child{background:color-mix(in srgb,var(--pen) 7%,transparent)}
+.pstats{margin-top:8px}
+@media (max-width:560px){
+  .top .wrap .games{display:flex;width:100%;order:3}
+  .top .wrap .games button{flex:1 1 auto;padding:.55em .3em;font-size:.84rem}
+}
 </style>
 </head>
 <body>
@@ -276,6 +327,7 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
       <button type="button" data-g="article" aria-pressed="false">Article</button>
       <button type="button" data-g="chaud" aria-pressed="false">Chaud-froid</button>
       <button type="button" data-g="lettres" aria-pressed="false">Lettres</button>
+      <button type="button" data-g="prix" aria-pressed="false">Juste prix</button>
     </div>
     <div class="modes" role="group" aria-label="Mode de jeu">
       <button type="button" id="mDaily" aria-pressed="false">Du jour</button>
@@ -415,8 +467,48 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
   </aside>
 </main>
 
+
+<main class="wrap pwrap" id="prixMain" hidden>
+  <div id="pBanner" hidden></div>
+  <div class="pdots" id="pDots" aria-label="Progression du jour"></div>
+  <div class="pcard">
+    <div class="pemo" id="pEmo" aria-hidden="true"></div>
+    <div class="ptxt"><div class="pname" id="pName"></div><div class="pdet" id="pDet"></div></div>
+  </div>
+  <div class="prange" aria-label="Fourchette">
+    <span class="pb" id="pLo">0 €</span><span class="pline"></span><span class="pmid" id="pMid">?</span><span class="pline"></span><span class="pb" id="pHi">?</span>
+  </div>
+  <form class="guess pguess" id="pForm" autocomplete="off">
+    <label for="pInput" hidden>Votre prix en euros</label>
+    <input id="pInput" type="text" inputmode="decimal" placeholder="Votre prix en €" maxlength="14" enterkeyhint="send">
+    <button class="btn primary" type="submit" id="pGo">Valider</button>
+    <button class="btn quiet" type="button" id="pHint">Indice</button>
+  </form>
+  <div class="fb pfb" id="pFb" aria-live="polite"></div>
+  <ul class="phints" id="pHints" hidden></ul>
+  <div id="pNext"></div>
+  <ol class="phist" id="pHist"></ol>
+  <section class="sec pstats">
+    <h2><span>Vos parties</span></h2>
+    <dl class="stats stats4">
+      <div><dt>Objets joués</dt><dd id="pObj">0</dd></div>
+      <div><dt>Prix trouvés</dt><dd id="pFound">0</dd></div>
+      <div><dt>Essais en moyenne</dt><dd id="pAvg">–</dd></div>
+      <div><dt>Série du jour</dt><dd id="pStreak">0</dd></div>
+    </dl>
+    <p class="note">Le prix est trouvé à 2 % près (au centime près sous 10 €). Ce sont des prix indicatifs moyens en France : selon le magasin ou la ville, la réalité peut varier.</p>
+  </section>
+</main>
+
 <main class="wrap lwrap" id="lettresMain" hidden>
   <div id="lBanner" hidden></div>
+  <div class="ldiff">
+    <div class="seg" role="group" aria-label="Difficulté">
+      <button type="button" data-d="normal" aria-pressed="true">Normal</button>
+      <button type="button" data-d="hard" aria-pressed="false">Difficile</button>
+    </div>
+    <span class="note" id="lDiffNote">Première lettre donnée, indices disponibles.</span>
+  </div>
   <div class="fb lfb" id="lFb" aria-live="polite">Trouvez le mot en 6 essais. La première lettre est donnée.</div>
   <div class="lgrid" id="lGrid" aria-label="Grille de jeu"></div>
   <div class="lkey" aria-label="Code couleur">
@@ -636,7 +728,7 @@ async function loadDaily(){
   startArticle(art);
   if(offline) feedback('<span class="warnline">Wikipédia est injoignable : l\'article du jour de secours est affiché. Rechargez la page plus tard pour le vrai.</span>');
 }
-const GAMES=["article","chaud","lettres"];
+const GAMES=["article","chaud","lettres","prix"];
 let GAME = GAMES.includes(lsGet("caviarde.jeu","article")) ? lsGet("caviarde.jeu","article") : "article";
 const playKey = g => g==="article" ? "caviarde.play" : "caviarde.play."+g;
 const PLAYS = Object.fromEntries(GAMES.map(g=>[g, lsGet(playKey(g),"daily")==="free"?"free":"daily"]));
@@ -648,8 +740,9 @@ function boot(){
   $("artBar").hidden = $("artMain").hidden = GAME!=="article";
   $("chaudMain").hidden = GAME!=="chaud";
   $("lettresMain").hidden = GAME!=="lettres";
+  $("prixMain").hidden = GAME!=="prix";
   $("skip").hidden = GAME!=="article" || !ST || ST.done;
-  if(GAME==="article") bootArticle(); else if(GAME==="chaud") Chaud.boot(); else Lettres.boot();
+  if(GAME==="article") bootArticle(); else if(GAME==="chaud") Chaud.boot(); else if(GAME==="prix") Prix.boot(); else Lettres.boot();
 }
 function bootArticle(){
   $("srcSec").hidden = PLAYS.article==="daily";
@@ -782,10 +875,10 @@ async function loadVectors(){
     }
     applyLemmas();
     vecStatus(`<b>Actif.</b> Les mots proches par le sens s'affichent dans les cases (${n.toLocaleString("fr-FR")} mots connus).`);
-    if(GAME!=="article") boot();
+    if(GAME==="chaud"||GAME==="lettres") boot();
   }catch(e){
     VEC=null; VEC_FAILED=true;
-    if(GAME!=="article") boot();
+    if(GAME==="chaud"||GAME==="lettres") boot();
     vecStatus(location.protocol==="file:"
       ? "Indisponible en ouvrant le fichier directement : mettez le site en ligne (GitHub Pages) pour activer les mots proches. En attendant, seuls les mots de la même famille sont détectés."
       : "Indisponible : le fichier <b>vecteurs.bin</b> doit se trouver à côté de index.html. En attendant, seuls les mots de la même famille sont détectés.");
@@ -1316,7 +1409,7 @@ const Lettres = {
     if(PLAYS.lettres==="daily"){
       const d=todayInfo();
       if(saved && saved.daily?.date===d.date) this.load(saved);
-      else this.load({target:atDay(LETTRES_ORDER,d.n), daily:d, rows:[], done:false, won:false});
+      else this.load({target:atDay(LETTRES_ORDER,d.n), daily:d, rows:[], done:false, won:false, hard:this.hardPref()});
     }else{
       if(saved && saved.target) this.load(saved); else this.fresh();
     }
@@ -1328,14 +1421,46 @@ const Lettres = {
     if(!pool.length){ lsSet("caviarde.lettres.played",[]); pool=LETTRES_WORDS.filter(w=>w!==today); }
     const w=pool[Math.floor(Math.random()*pool.length)];
     played.push(w); lsSet("caviarde.lettres.played",played);
-    this.load({target:w, daily:null, rows:[], done:false, won:false});
+    this.load({target:w, daily:null, rows:[], done:false, won:false, hard:this.hardPref()});
   },
   load(st){
-    this.st=st; this.cur=st.target[0]; this.typedFirst=false;
-    $("lFb").textContent = st.done ? "" : (st.daily?`Mot du jour n°${st.daily.n} : ${st.target.length} lettres, commence par ${st.target[0]}.`:`Nouveau mot : ${st.target.length} lettres, commence par ${st.target[0]}.`);
+    if(st.hard===undefined) st.hard=false;
+    this.st=st; this.cur=this.start(); this.typedFirst=false;
+    $("lFb").textContent = st.done ? "" : this.intro();
     this.save(); this.render();
   },
   save(){ lsSet(this.key(), this.st); },
+  hardPref(){ return lsGet("caviarde.lettres.hard",false)===true; },
+  start(){ return this.st.hard ? "" : this.st.target[0]; },
+  intro(){
+    const st=this.st, L=st.target.length;
+    const head = st.daily ? `Mot du jour n°${st.daily.n}` : "Nouveau mot";
+    return st.hard ? `${head} : ${L} lettres, mode difficile.` : `${head} : ${L} lettres, commence par ${st.target[0]}.`;
+  },
+  hardCheck(guess){
+    const t=this.st.target;
+    for(const r of this.st.rows){
+      const sc=this.score(r,t);
+      for(let i=0;i<r.length;i++) if(sc[i]==="ok" && guess[i]!==r[i]) return `la lettre n°${i+1} doit être un ${r[i]}.`;
+      const need={};
+      for(let i=0;i<r.length;i++) if(sc[i]!=="no") need[r[i]]=(need[r[i]]||0)+1;
+      for(const [ch,n] of Object.entries(need)){
+        const have=[...guess].filter(c=>c===ch).length;
+        if(have<n) return n>1 ? `le mot doit contenir ${n} fois la lettre ${ch}.` : `le mot doit contenir la lettre ${ch}.`;
+      }
+    }
+    return "";
+  },
+  setHard(h){
+    lsSet("caviarde.lettres.hard",h);
+    const st=this.st; if(!st) return;
+    if(!st.done && !st.rows.length && !(st.hints||[]).length){
+      st.hard=h; this.cur=this.start(); this.typedFirst=false; this.save(); this.render(); $("lFb").textContent=this.intro();
+    }else{
+      this.render();
+      $("lFb").textContent = h===!!st.hard ? this.intro() : `Le mode ${h?"difficile":"normal"} s'appliquera au prochain mot.`;
+    }
+  },
   score(guess, target){
     const res=Array(guess.length).fill("no"), left={};
     for(let i=0;i<target.length;i++){ if(guess[i]===target[i]) res[i]="ok"; else left[target[i]]=(left[target[i]]||0)+1; }
@@ -1343,7 +1468,9 @@ const Lettres = {
     return res;
   },
   known(){ // lettres bien placées déjà trouvées
-    const t=this.st.target, k=Array(t.length).fill(""); k[0]=t[0];
+    const t=this.st.target, k=Array(t.length).fill("");
+    if(this.st.hard) return k;
+    k[0]=t[0];
     for(const i of this.st.hints||[]) k[i]=t[i];
     for(const r of this.st.rows) this.score(r,t).forEach((s,i)=>{ if(s==="ok") k[i]=t[i]; });
     return k;
@@ -1351,15 +1478,15 @@ const Lettres = {
   key2(ch){
     const st=this.st; if(!st || st.done || this.busy) return;
     const L=st.target.length;
-    if(ch==="⌫"){ if(this.cur.length>1) this.cur=this.cur.slice(0,-1); if(this.cur.length===1) this.typedFirst=false; this.renderGrid(); return; }
+    if(ch==="⌫"){ if(this.cur.length>(st.hard?0:1)) this.cur=this.cur.slice(0,-1); if(this.cur.length===1) this.typedFirst=false; this.renderGrid(); return; }
     if(ch==="↵"){ this.enter(); return; }
     if(!/^[A-Z]$/.test(ch)) return;
-    if(this.cur.length===1 && !this.typedFirst && ch===st.target[0]){ this.typedFirst=true; return; }
+    if(!st.hard && this.cur.length===1 && !this.typedFirst && ch===st.target[0]){ this.typedFirst=true; return; }
     this.typedFirst=true;
     if(this.cur.length<L){ this.cur+=ch; this.renderGrid(); }
   },
   hint(){
-    const st=this.st; if(!st || st.done || this.busy) return;
+    const st=this.st; if(!st || st.done || this.busy || st.hard) return;
     const k=this.known(), free=[...k.keys()].filter(i=>!k[i]);
     if(free.length<=2){ this.msg("Plus d'indice : à toi de trouver les dernières lettres !"); return; }
     const i=free[Math.floor(Math.random()*free.length)];
@@ -1370,8 +1497,9 @@ const Lettres = {
     const st=this.st, L=st.target.length;
     if(this.cur.length<L){ this.msg(`Il manque des lettres : le mot en fait ${L}.`, true); return; }
     if(!this.valid.has(this.cur)){ this.msg(`« ${this.cur} » n'est pas dans le dictionnaire.`, true); return; }
+    if(st.hard){ const why=this.hardCheck(this.cur); if(why){ this.msg("Mode difficile : "+why, true); return; } }
     st.rows.push(this.cur);
-    const guess=this.cur; this.cur=st.target[0]; this.typedFirst=false;
+    const guess=this.cur; this.cur=this.start(); this.typedFirst=false;
     const won=guess===st.target, lost=!won && st.rows.length>=MAXTRY;
     this.save();
     this.busy=true;
@@ -1434,9 +1562,13 @@ const Lettres = {
   },
   render(flipRow){
     const st=this.st; if(!st) return;
-    $("meta").textContent=(st.daily?"Lettres du jour n°"+st.daily.n:"Lettres")+" · "+st.rows.length+"/"+MAXTRY;
+    $("meta").textContent=(st.daily?"Lettres du jour n°"+st.daily.n:"Lettres")+(st.hard?" · difficile":"")+" · "+st.rows.length+"/"+MAXTRY;
     this.renderGrid(flipRow); this.renderKb();
-    $("lHint").hidden=st.done;
+    $("lHint").hidden=st.done || st.hard;
+    const pref=this.hardPref();
+    document.querySelectorAll(".ldiff .seg button").forEach(b=>b.setAttribute("aria-pressed", String((b.dataset.d==="hard")===pref)));
+    $("lDiffNote").textContent = (pref ? "Pas de première lettre, pas d'indice, et chaque essai doit réutiliser les lettres déjà trouvées." : "Première lettre donnée, indices disponibles.")
+      + (pref!==!!st.hard && !st.done ? ` Ce mot reste en mode ${st.hard?"difficile":"normal"}.` : "");
     const s=gStats("caviarde.lettres.stats");
     $("lGames").textContent=s.games; $("lWins").textContent=s.wins; $("lAvg").textContent=s.wins?(s.guessSum/s.wins).toFixed(1).replace(".",","):"–"; $("lStreak").textContent=s.streak;
     if(!st.done){ $("lBanner").hidden=true; return; }
@@ -1448,13 +1580,14 @@ const Lettres = {
       onShare: box=>{
         const em={ok:"🟥",mid:"🟡",no:"⬛"};
         const grid=st.rows.map(r=>this.score(r,st.target).map(s=>em[s]).join("")).join("\n");
-        const head=st.daily?`Lettres du jour n°${st.daily.n}`:"Lettres";
+        const head=(st.daily?`Lettres du jour n°${st.daily.n}`:"Lettres")+(st.hard?" (difficile 💀)":"");
         const nh=(st.hints||[]).length;
         shareText(`${head} : ${st.won?st.rows.length:"X"}/${MAXTRY}${nh?` (${plural(nh,"indice")})`:""}\n${grid}\n${location.origin+location.pathname}`, box);
       }
     });
   }
 };
+document.querySelectorAll(".ldiff .seg button").forEach(b=>b.addEventListener("click",()=>{ b.blur(); Lettres.setHard(b.dataset.d==="hard"); }));
 $("lKb").addEventListener("click",e=>{ const b=e.target.closest("button"); if(b){ b.blur(); Lettres.key2(b.dataset.k); } });
 document.addEventListener("keydown",e=>{
   if(GAME!=="lettres" || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -1464,6 +1597,266 @@ document.addEventListener("keydown",e=>{
   else if(e.key.length===1){ const u=upNorm(e.key); if(/^[A-Z]$/.test(u)) Lettres.key2(u); }
 });
 
+
+
+/* ---------- Juste prix ---------- */
+// [emoji, objet, précision, prix indicatif en €]
+const PRIX_ITEMS = [
+["🥖","Une baguette","en boulangerie",1.1],
+["🥐","Un croissant au beurre","en boulangerie",1.3],
+["🥪","Un sandwich jambon-beurre","en boulangerie",4.5],
+["🍰","Un éclair au chocolat","en pâtisserie",3.5],
+["🧁","Une boîte de 6 macarons","en pâtisserie",12],
+["🎂","Un gâteau d'anniversaire","8 parts, en pâtisserie",30],
+["🍫","Une tablette de chocolat noir","100 g, en supermarché",2.2],
+["🧈","Une plaquette de beurre doux","250 g, grande marque",2.6],
+["🥛","Une bouteille de lait demi-écrémé","1 litre, marque distributeur",1],
+["🥚","Une boîte de 12 œufs","plein air, en supermarché",3.9],
+["🍌","Des bananes","1 kg, en supermarché",2],
+["🍎","Des pommes Golden","1 kg, en supermarché",2.5],
+["🍝","Un paquet de spaghetti","500 g, marque distributeur",0.9],
+["🍚","Un paquet de riz basmati","1 kg, en supermarché",3],
+["💧","Une bouteille d'eau minérale","1,5 litre, en supermarché",0.6],
+["🧃","Un jus d'orange pur jus","1 litre, en supermarché",2.2],
+["🫒","Une bouteille d'huile d'olive vierge extra","1 litre, en supermarché",10],
+["🍯","Un pot de miel de France","500 g",8],
+["🧀","Du comté AOP","1 kg, à la coupe",22],
+["🥩","Du steak haché de bœuf","1 kg, 15 % de matières grasses",13],
+["🥑","Un avocat","à l'unité",1.2],
+["🍓","Des fraises de France","1 kg, en saison",8],
+["🍉","Une pastèque entière","en été, en supermarché",5],
+["🥥","Une noix de coco","à l'unité",2.5],
+["🍬","Un paquet de bonbons","200 g, grande marque",2],
+["🦪","Une douzaine d'huîtres","calibre n°3, chez le poissonnier",12],
+["☕","Un café expresso","au comptoir d'un café parisien",2.2],
+["🍺","Un demi de bière pression","25 cl, dans un bar parisien",6],
+["🍾","Une bouteille de champagne brut","75 cl, grande maison",40],
+["🍷","Une bouteille de bordeaux rouge","75 cl, entrée de gamme",5],
+["🍕","Une pizza margherita","en pizzeria",11],
+["🍔","Un menu burger, frites et boisson","dans un fast-food",10],
+["🌯","Un kebab avec frites","dans un snack",9],
+["🍣","Un plateau de 18 sushis","à emporter",18],
+["🥗","Une salade composée","dans une brasserie parisienne",15],
+["🍦","Une boule de glace","chez un glacier",3],
+["🍿","Un grand pot de pop-corn","au cinéma",7],
+["🧻","Un paquet de 12 rouleaux de papier toilette","en supermarché",5],
+["💡","Une ampoule LED","culot E27, équivalent 60 W",3.5],
+["🔋","Un paquet de 4 piles AA","grande marque",6],
+["🧴","Un gel douche","250 ml, grande marque",3],
+["🪥","Une brosse à dents manuelle","grande marque",3],
+["☂️","Un parapluie pliant","modèle basique",12],
+["🔨","Un marteau","de bricolage",12],
+["🕯️","Une bougie parfumée","en magasin de déco",15],
+["🪴","Une plante verte en pot","environ 60 cm, en jardinerie",25],
+["💐","Un bouquet de 12 roses rouges","chez le fleuriste",40],
+["🛏️","Un oreiller","en grande enseigne de meubles",15],
+["🪑","Une chaise","en kit, grande enseigne de meubles",30],
+["🛋️","Un canapé 3 places","entrée de gamme",500],
+["🧺","Un lave-linge","8 kg, entrée de gamme",350],
+["🧊","Un réfrigérateur-congélateur","entrée de gamme",400],
+["✏️","Un crayon à papier","HB, à l'unité",0.5],
+["📏","Une règle en plastique","30 cm",1],
+["🎒","Un sac à dos scolaire","milieu de gamme",35],
+["🧤","Une paire de gants en laine","modèle simple",10],
+["🧳","Une valise cabine","milieu de gamme",80],
+["🕶️","Des lunettes de soleil","de grande marque",150],
+["👟","Une paire de chaussures de running","milieu de gamme",100],
+["🎮","Une PlayStation 5","prix de lancement en France, en 2020",500],
+["🕹️","Une Nintendo Switch","prix de lancement en France, en 2017",330],
+["📱","Un smartphone haut de gamme","dernier modèle, 256 Go",1200],
+["💻","Un ordinateur portable","entrée de gamme",400],
+["📺","Une télévision 4K","55 pouces, entrée de gamme",400],
+["🖨️","Une imprimante jet d'encre","entrée de gamme",60],
+["🎧","Des écouteurs sans fil","milieu de gamme",80],
+["⌚","Une montre connectée","milieu de gamme",250],
+["💾","Une clé USB","64 Go",8],
+["🧩","Un Rubik's Cube","classique 3×3",12],
+["🎲","Un Monopoly","édition classique",30],
+["📚","Un roman en format poche","neuf",9],
+["📖","Un roman grand format","nouveauté, neuf",22],
+["🎬","Une place de cinéma","plein tarif, à Paris",14],
+["🎳","Une partie de bowling","par personne, le soir",7],
+["🎸","Une guitare classique","pour débutant",100],
+["⚽","Un ballon de football","taille 5, milieu de gamme",20],
+["🚲","Un vélo à assistance électrique","entrée de gamme",1000],
+["🛴","Une trottinette électrique","milieu de gamme",400],
+["🏋️","Un abonnement à une salle de sport à bas prix","par mois",30],
+["🚇","Un ticket de métro à Paris","à l'unité, en 2025",2.5],
+["✂️","Une coupe de cheveux homme","en salon de coiffure",25],
+["🩺","Une consultation chez le médecin généraliste","secteur 1, tarif conventionné",30],
+["🛂","Un passeport","timbre fiscal pour un adulte",86],
+["📵","Une amende pour téléphone tenu en main au volant","amende forfaitaire",135],
+["🚗","Le permis de conduire","formation en auto-école, coût moyen",1800],
+["🏨","Une nuit d'hôtel","2 étoiles, en province",70],
+["📶","Un forfait mobile sans engagement","100 Go par mois, opérateur à bas prix",10],
+["🚴","La prime du vainqueur du Tour de France","montant officiel",500000]
+];
+const PRIX_ORDER = seededShuffle(PRIX_ITEMS.map((_,i)=>i), 550055);
+const PRIX_DAY = 5, PRIX_TRIES = 10;
+const fmtEur = v => (v<10 ? v.toFixed(2) : Math.round(v).toLocaleString("fr-FR")).replace(".",",").replace(",00","") + " €";
+const fmtExact = v => v<10 ? v.toFixed(2).replace(".",",")+" €" : Math.round(v).toLocaleString("fr-FR")+" €";
+function prixOk(g, p){ return p<10 ? Math.abs(g-p) < 0.051 : Math.abs(g-p) <= Math.max(0.5, p*0.02); }
+
+const Prix = {
+  st:null,
+  key(){ return PLAYS.prix==="daily" ? "caviarde.prix.daily" : "caviarde.prix.free"; },
+  stats(){ return Object.assign({objets:0,trouves:0,essais:0,hist:{},streak:0,lastWin:null}, lsGet("caviarde.prix.stats",{})); },
+  boot(){
+    $("pBanner").hidden=true;
+    const saved=lsGet(this.key(),null);
+    if(PLAYS.prix==="daily"){
+      const d=todayInfo();
+      if(saved && saved.daily?.date===d.date) this.load(saved);
+      else {
+        const start=((d.n-1)*PRIX_DAY)%PRIX_ORDER.length;
+        const list=Array.from({length:PRIX_DAY},(_,k)=>PRIX_ORDER[(start+k)%PRIX_ORDER.length]);
+        this.load({daily:d, list, cur:0, rounds:list.map(()=>({g:[],h:0,done:false,won:false})), over:false});
+      }
+    }else{
+      if(saved && saved.list) this.load(saved); else this.fresh();
+    }
+  },
+  fresh(){
+    const played=lsGet("caviarde.prix.played",[]);
+    const today=new Set(Array.from({length:PRIX_DAY},(_,k)=>PRIX_ORDER[(((todayInfo().n-1)*PRIX_DAY)+k)%PRIX_ORDER.length]));
+    let pool=PRIX_ITEMS.map((_,i)=>i).filter(i=>!played.includes(i) && !today.has(i));
+    if(!pool.length){ lsSet("caviarde.prix.played",[]); pool=PRIX_ITEMS.map((_,i)=>i).filter(i=>!today.has(i)); }
+    const i=pool[Math.floor(Math.random()*pool.length)];
+    played.push(i); lsSet("caviarde.prix.played",played);
+    this.load({daily:null, list:[i], cur:0, rounds:[{g:[],h:0,done:false,won:false}], over:false});
+    $("pFb").textContent="Nouvel objet : à combien l'estimez-vous ?";
+  },
+  load(st){
+    this.st=st; this.save();
+    if(!st.over && !st.rounds[st.cur].g.length) $("pFb").textContent = st.daily ? `Juste prix du jour n°${st.daily.n} : ${PRIX_DAY} objets à estimer, ${PRIX_TRIES} essais par objet.` : "À combien l'estimez-vous ?";
+    this.render();
+    if(!st.over && !st.rounds[st.cur].done) setTimeout(()=>$("pInput")?.focus({preventScroll:true}),0);
+  },
+  save(){ lsSet(this.key(), this.st); },
+  item(){ return PRIX_ITEMS[this.st.list[this.st.cur]]; },
+  round(){ return this.st.rounds[this.st.cur]; },
+  used(r){ return r.g.length + r.h; },
+  bounds(r, p){
+    let lo=null, hi=null;
+    for(const g of r.g){ if(g.v<p && (lo===null || g.v>lo)) lo=g.v; if(g.v>p && (hi===null || g.v<hi)) hi=g.v; }
+    return {lo,hi};
+  },
+  submit(raw){
+    const st=this.st; if(!st || st.over) return;
+    const r=this.round(); if(r.done) return;
+    const v=parseFloat(String(raw).replace(/\s|€/g,"").replace(",","."));
+    if(!isFinite(v) || v<=0 || v>1e8){ $("pFb").textContent="Tapez un prix en euros, par exemple 12 ou 3,50."; return; }
+    const p=this.item()[3];
+    const val = p<10 ? Math.round(v*100)/100 : Math.round(v*100)/100;
+    if(r.g.some(g=>g.v===val)){ $("pFb").textContent=`Vous avez déjà proposé ${fmtExact(val)} (non compté).`; return; }
+    const win=prixOk(val,p);
+    r.g.push({v:val, d: win?0:(val<p?1:-1)});
+    if(win){ r.done=true; r.won=true; }
+    else if(this.used(r)>=PRIX_TRIES){ r.done=true; r.won=false; }
+    this.after(r);
+  },
+  hint(){
+    const st=this.st; if(!st || st.over) return;
+    const r=this.round(); if(r.done) return;
+    if(r.h>=2){ $("pFb").textContent="Plus d'indice pour cet objet."; return; }
+    r.h++;
+    if(this.used(r)>=PRIX_TRIES){ r.done=true; r.won=false; }
+    this.after(r, true);
+  },
+  hintText(r){
+    const p=this.item()[3], ent=String(Math.floor(p));
+    const out=[];
+    if(r.h>=1) out.push(p<1 ? "Le prix est inférieur à 1 €." : `Le prix a ${plural(ent.length,"chiffre")} avant la virgule.`);
+    if(r.h>=2) out.push(p<1 ? `Il y a ${String(Math.round(p*100)).padStart(2,"0")[0]} dizaine(s) de centimes.` : `Il commence par ${ent[0]}.`);
+    return out;
+  },
+  after(r, fromHint){
+    const st=this.st, p=this.item()[3], last=r.g[r.g.length-1];
+    if(r.done){
+      this.record(r);
+      if(r.won) $("pFb").innerHTML=`<b>Le juste prix !</b> ${fmtExact(p)}, trouvé en ${plural(this.used(r),"essai")}.`;
+      else $("pFb").innerHTML=`Perdu ! Le prix était <b>${fmtExact(p)}</b>.`;
+      const allDone=st.rounds.every(x=>x.done);
+      if(!st.daily){ st.over=true; if(r.won) fireworks(); }
+      else if(allDone){ st.over=true; this.recordDay(); if(st.rounds.filter(x=>x.won).length>=3) fireworks(); }
+    }else if(fromHint){
+      $("pFb").textContent="Indice : "+this.hintText(r).slice(-1)[0]+` (${PRIX_TRIES-this.used(r)} essais restants)`;
+    }else{
+      const close=Math.abs(last.v-p)/p<=0.1;
+      $("pFb").innerHTML=`<b>${last.d>0?"C'est plus !":"C'est moins !"}</b>${close?" Tu chauffes 🔥":""} <span class="pleft">${PRIX_TRIES-this.used(r)} essais restants</span>`;
+    }
+    this.save(); this.render();
+  },
+  record(r){
+    const s=this.stats(); s.objets++; if(r.won){ s.trouves++; s.essais+=this.used(r); }
+    lsSet("caviarde.prix.stats",s);
+  },
+  recordDay(){
+    const st=this.st, s=this.stats(), date=st.daily.date;
+    if(s.hist[date]) return;
+    const found=st.rounds.filter(x=>x.won).length;
+    s.hist[date]={found, essais:st.rounds.reduce((a,x)=>a+this.used(x),0)};
+    if(found>=3){ s.streak = s.lastWin===dayBefore(date) ? s.streak+1 : 1; s.lastWin=date; } else s.streak=0;
+    lsSet("caviarde.prix.stats",s);
+  },
+  next(){
+    const st=this.st;
+    if(st.daily){ if(st.cur<st.list.length-1){ st.cur++; this.save(); $("pFb").textContent=`Objet ${st.cur+1}/${st.list.length} : à combien l'estimez-vous ?`; this.render(); $("pInput").focus({preventScroll:true}); } }
+    else { this.fresh(); $("pInput").focus({preventScroll:true}); }
+  },
+  share(box){
+    const st=this.st, em=st.rounds.map(r=>r.won?`✅${this.used(r)}`:"❌").join(" ");
+    const found=st.rounds.filter(r=>r.won).length;
+    const head = st.daily ? `Juste prix du jour n°${st.daily.n} : ${found}/${st.rounds.length} objets trouvés` : (found?`Juste prix : trouvé en ${plural(this.used(st.rounds[0]),"essai")}`:"Juste prix : raté");
+    shareText(`${head}\n${em}\n${location.origin+location.pathname}`, box);
+  },
+  render(){
+    const st=this.st; if(!st) return;
+    const [emo,name,det,p]=this.item(), r=this.round();
+    $("meta").textContent = (st.daily?`Juste prix du jour n°${st.daily.n} · objet ${st.cur+1}/${st.list.length}`:"Juste prix");
+    // progression du jour
+    const dots=$("pDots"); dots.replaceChildren(); dots.hidden=!st.daily;
+    if(st.daily) st.rounds.forEach((x,i)=>{ const s=document.createElement("span"); s.className="pdot"+(x.done?(x.won?" won":" lost"):"")+(i===st.cur?" cur":""); s.textContent=x.done?(x.won?this.used(x):"✕"):(i+1); s.title=`Objet ${i+1}`; dots.append(s); });
+    $("pEmo").textContent=emo; $("pName").textContent=name; $("pDet").textContent=det;
+    // fourchette
+    const {lo,hi}=this.bounds(r,p);
+    $("pLo").textContent = lo===null ? "0 €" : fmtEur(lo);
+    $("pHi").textContent = hi===null ? "?" : fmtEur(hi);
+    $("pMid").textContent = r.done ? fmtExact(p) : "?";
+    $("pMid").className = "pmid"+(r.done?(r.won?" won":" lost"):"");
+    // indices
+    const ht=this.hintText(r); $("pHints").replaceChildren(...ht.map(t=>{ const li=document.createElement("li"); li.textContent=t; return li; })); $("pHints").hidden=!ht.length;
+    // historique
+    const ol=$("pHist"); ol.replaceChildren();
+    [...r.g].reverse().forEach((g,k)=>{
+      const li=document.createElement("li"); li.className=g.d===0?"win":(g.d>0?"up":"down");
+      const n=document.createElement("span"); n.className="pn"; n.textContent=r.g.length-k;
+      const v=document.createElement("span"); v.className="pv"; v.textContent=fmtExact(g.v);
+      const t=document.createElement("span"); t.className="pt"; t.textContent=g.d===0?"Juste prix !":(g.d>0?"C'est plus ↑":"C'est moins ↓");
+      li.append(n,v,t); ol.append(li);
+    });
+    $("pInput").disabled=r.done; $("pGo").disabled=r.done; $("pHint").disabled=r.done || r.h>=2;
+    // bouton objet suivant (mode du jour, en cours)
+    const nx=$("pNext"); nx.replaceChildren();
+    if(st.daily && r.done && !st.over){ const b=document.createElement("button"); b.className="btn primary"; b.type="button"; b.textContent=`Objet suivant (${st.cur+2}/${st.list.length})`; b.onclick=()=>this.next(); nx.append(b); }
+    // stats
+    const s=this.stats();
+    $("pObj").textContent=s.objets; $("pFound").textContent=s.trouves; $("pAvg").textContent=s.trouves?(s.essais/s.trouves).toFixed(1).replace(".",","):"–"; $("pStreak").textContent=s.streak;
+    // bandeau de fin
+    if(!st.over){ $("pBanner").hidden=true; return; }
+    const found=st.rounds.filter(x=>x.won).length;
+    endBanner($("pBanner"),{
+      title: st.daily ? [`${found}/${st.rounds.length} objets trouvés`, " en ", strongText(plural(st.rounds.reduce((a,x)=>a+this.used(x),0),"essai")), "."]
+                      : (found ? ["Le juste prix : ", strongText(fmtExact(p)), "."] : ["Le prix était ", strongText(fmtExact(p)), "."]),
+      lines: st.daily ? [`Prochaine série (n°${st.daily.n+1}) demain à minuit.`] : [],
+      primary: st.daily ? "Jouer en illimité" : "Objet suivant",
+      onPrimary: ()=>{ if(st.daily) switchMode("free"); else this.next(); },
+      onShare: box=>this.share(box)
+    });
+  }
+};
+$("pForm").addEventListener("submit",e=>{ e.preventDefault(); const v=$("pInput").value; $("pInput").value=""; Prix.submit(v); });
+$("pHint").addEventListener("click",()=>Prix.hint());
 
 /* ---------- Indices ---------- */
 function hintArticle(){
