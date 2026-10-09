@@ -288,6 +288,7 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
 .ptxt{min-width:0}
 .pname{font-family:var(--f-read);font-weight:600;font-size:1.3rem;line-height:1.3;text-wrap:balance}
 .pdet{color:var(--ink-2);font-size:.95rem;margin-top:3px}
+.psrc{color:var(--ink-2);font:500 .72rem var(--f-num);letter-spacing:.02em;margin-top:8px}
 .prange{display:flex;align-items:center;gap:8px}
 .prange .pb{font:500 .95rem var(--f-num);font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
 .prange .pline{flex:1;height:2px;background:var(--rule);border-radius:1px}
@@ -473,7 +474,7 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
   <div class="pdots" id="pDots" aria-label="Progression du jour"></div>
   <div class="pcard">
     <div class="pemo" id="pEmo" aria-hidden="true"></div>
-    <div class="ptxt"><div class="pname" id="pName"></div><div class="pdet" id="pDet"></div></div>
+    <div class="ptxt"><div class="pname" id="pName"></div><div class="pdet" id="pDet"></div><div class="psrc" id="pSrc"></div></div>
   </div>
   <div class="prange" aria-label="Fourchette">
     <span class="pb" id="pLo">0 €</span><span class="pline"></span><span class="pmid" id="pMid">?</span><span class="pline"></span><span class="pb" id="pHi">?</span>
@@ -496,7 +497,7 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
       <div><dt>Essais en moyenne</dt><dd id="pAvg">–</dd></div>
       <div><dt>Série du jour</dt><dd id="pStreak">0</dd></div>
     </dl>
-    <p class="note">Le prix est trouvé à 2 % près (au centime près sous 10 €). Ce sont des prix indicatifs moyens en France : selon le magasin ou la ville, la réalité peut varier.</p>
+    <p class="note">Le prix est trouvé à 2 % près (à 5 centimes près sous 10 €). Ce sont de vrais produits, avec leur prix en ligne relevé sur carrefour.fr et boulanger.com le 9 octobre 2026 : les prix ont pu changer depuis.</p>
   </section>
 </main>
 
@@ -1600,106 +1601,151 @@ document.addEventListener("keydown",e=>{
 
 
 /* ---------- Juste prix ---------- */
-// [emoji, objet, précision, prix indicatif en €]
+// [emoji, produit, précision, prix en ligne relevé, magasin]
 const PRIX_ITEMS = [
-["🥖","Une baguette","en boulangerie",1.1],
-["🥐","Un croissant au beurre","en boulangerie",1.3],
-["🥪","Un sandwich jambon-beurre","en boulangerie",4.5],
-["🍰","Un éclair au chocolat","en pâtisserie",3.5],
-["🧁","Une boîte de 6 macarons","en pâtisserie",12],
-["🎂","Un gâteau d'anniversaire","8 parts, en pâtisserie",30],
-["🍫","Une tablette de chocolat noir","100 g, en supermarché",2.2],
-["🧈","Une plaquette de beurre doux","250 g, grande marque",2.6],
-["🥛","Une bouteille de lait demi-écrémé","1 litre, marque distributeur",1],
-["🥚","Une boîte de 12 œufs","plein air, en supermarché",3.9],
-["🍌","Des bananes","1 kg, en supermarché",2],
-["🍎","Des pommes Golden","1 kg, en supermarché",2.5],
-["🍝","Un paquet de spaghetti","500 g, marque distributeur",0.9],
-["🍚","Un paquet de riz basmati","1 kg, en supermarché",3],
-["💧","Une bouteille d'eau minérale","1,5 litre, en supermarché",0.6],
-["🧃","Un jus d'orange pur jus","1 litre, en supermarché",2.2],
-["🫒","Une bouteille d'huile d'olive vierge extra","1 litre, en supermarché",10],
-["🍯","Un pot de miel de France","500 g",8],
-["🧀","Du comté AOP","1 kg, à la coupe",22],
-["🥩","Du steak haché de bœuf","1 kg, 15 % de matières grasses",13],
-["🥑","Un avocat","à l'unité",1.2],
-["🍓","Des fraises de France","1 kg, en saison",8],
-["🍉","Une pastèque entière","en été, en supermarché",5],
-["🥥","Une noix de coco","à l'unité",2.5],
-["🍬","Un paquet de bonbons","200 g, grande marque",2],
-["🦪","Une douzaine d'huîtres","calibre n°3, chez le poissonnier",12],
-["☕","Un café expresso","au comptoir d'un café parisien",2.2],
-["🍺","Un demi de bière pression","25 cl, dans un bar parisien",6],
-["🍾","Une bouteille de champagne brut","75 cl, grande maison",40],
-["🍷","Une bouteille de bordeaux rouge","75 cl, entrée de gamme",5],
-["🍕","Une pizza margherita","en pizzeria",11],
-["🍔","Un menu burger, frites et boisson","dans un fast-food",10],
-["🌯","Un kebab avec frites","dans un snack",9],
-["🍣","Un plateau de 18 sushis","à emporter",18],
-["🥗","Une salade composée","dans une brasserie parisienne",15],
-["🍦","Une boule de glace","chez un glacier",3],
-["🍿","Un grand pot de pop-corn","au cinéma",7],
-["🧻","Un paquet de 12 rouleaux de papier toilette","en supermarché",5],
-["💡","Une ampoule LED","culot E27, équivalent 60 W",3.5],
-["🔋","Un paquet de 4 piles AA","grande marque",6],
-["🧴","Un gel douche","250 ml, grande marque",3],
-["🪥","Une brosse à dents manuelle","grande marque",3],
-["☂️","Un parapluie pliant","modèle basique",12],
-["🔨","Un marteau","de bricolage",12],
-["🕯️","Une bougie parfumée","en magasin de déco",15],
-["🪴","Une plante verte en pot","environ 60 cm, en jardinerie",25],
-["💐","Un bouquet de 12 roses rouges","chez le fleuriste",40],
-["🛏️","Un oreiller","en grande enseigne de meubles",15],
-["🪑","Une chaise","en kit, grande enseigne de meubles",30],
-["🛋️","Un canapé 3 places","entrée de gamme",500],
-["🧺","Un lave-linge","8 kg, entrée de gamme",350],
-["🧊","Un réfrigérateur-congélateur","entrée de gamme",400],
-["✏️","Un crayon à papier","HB, à l'unité",0.5],
-["📏","Une règle en plastique","30 cm",1],
-["🎒","Un sac à dos scolaire","milieu de gamme",35],
-["🧤","Une paire de gants en laine","modèle simple",10],
-["🧳","Une valise cabine","milieu de gamme",80],
-["🕶️","Des lunettes de soleil","de grande marque",150],
-["👟","Une paire de chaussures de running","milieu de gamme",100],
-["🎮","Une PlayStation 5","prix de lancement en France, en 2020",500],
-["🕹️","Une Nintendo Switch","prix de lancement en France, en 2017",330],
-["📱","Un smartphone haut de gamme","dernier modèle, 256 Go",1200],
-["💻","Un ordinateur portable","entrée de gamme",400],
-["📺","Une télévision 4K","55 pouces, entrée de gamme",400],
-["🖨️","Une imprimante jet d'encre","entrée de gamme",60],
-["🎧","Des écouteurs sans fil","milieu de gamme",80],
-["⌚","Une montre connectée","milieu de gamme",250],
-["💾","Une clé USB","64 Go",8],
-["🧩","Un Rubik's Cube","classique 3×3",12],
-["🎲","Un Monopoly","édition classique",30],
-["📚","Un roman en format poche","neuf",9],
-["📖","Un roman grand format","nouveauté, neuf",22],
-["🎬","Une place de cinéma","plein tarif, à Paris",14],
-["🎳","Une partie de bowling","par personne, le soir",7],
-["🎸","Une guitare classique","pour débutant",100],
-["⚽","Un ballon de football","taille 5, milieu de gamme",20],
-["🚲","Un vélo à assistance électrique","entrée de gamme",1000],
-["🛴","Une trottinette électrique","milieu de gamme",400],
-["🏋️","Un abonnement à une salle de sport à bas prix","par mois",30],
-["🚇","Un ticket de métro à Paris","à l'unité, en 2025",2.5],
-["✂️","Une coupe de cheveux homme","en salon de coiffure",25],
-["🩺","Une consultation chez le médecin généraliste","secteur 1, tarif conventionné",30],
-["🛂","Un passeport","timbre fiscal pour un adulte",86],
-["📵","Une amende pour téléphone tenu en main au volant","amende forfaitaire",135],
-["🚗","Le permis de conduire","formation en auto-école, coût moyen",1800],
-["🏨","Une nuit d'hôtel","2 étoiles, en province",70],
-["📶","Un forfait mobile sans engagement","100 Go par mois, opérateur à bas prix",10],
-["🚴","La prime du vainqueur du Tour de France","montant officiel",500000]
+["🫒", "Huile d'olive vierge extra", "Puget · bouteille de 1 L", 10.75, "C"],
+["🥔", "Purée l'Originale", "Mousline · 4 sachets de 130 g", 2.39, "C"],
+["🎃", "Soupe L'Onctueuse potiron et épices douces", "Knorr · brique de 1 L", 1.99, "C"],
+["🥣", "Velouté protéiné courgettes, skyr et lentilles corail", "Knorr · brique de 1 L", 2.95, "C"],
+["🍜", "Ramen saveur poulet aigre-douce et légumes", "De Zhuang · box de 231 g", 2.89, "C"],
+["🐟", "Sardines à l'huile d'olive", "Le Phare du Cap Bon · boîte de 110 g", 1.79, "C"],
+["🍜", "Nouilles Street Food teriyaki", "Suzi Wan · sachet de 250 g", 2.59, "C"],
+["🍝", "Pâtes penne rigate", "Barilla · boîte de 1 kg", 1.95, "C"],
+["🍝", "Spaghetti n°5", "Barilla · boîte de 1 kg", 1.99, "C"],
+["🌾", "Quinoa bio", "Céréal Bio · sachet de 220 g", 2.15, "C"],
+["🦆", "Cuisses de canard au sel rose", "Jean Larnaudie · boîte de 1,24 kg", 19.99, "C"],
+["🦆", "Foie gras de canard entier du Sud-Ouest", "Jean Larnaudie · pot de 125 g", 26.99, "C"],
+["🌾", "Semoule fine", "Samia · paquet de 1 kg", 2.35, "C"],
+["🍚", "Riz basmati 2 min", "Ben's Original · sachet de 220 g", 1.65, "C"],
+["🫘", "Lentilles, riz et soja bio", "Céréal Bio · sachet de 250 g", 2.05, "C"],
+["🥤", "Coca-Cola Zéro", "bouteille de 1,25 L", 1.61, "C"],
+["🍺", "Bière blonde 1664", "pack de 18 × 25 cl", 11.34, "C"],
+["🍺", "Desperados", "pack de 6 × 33 cl", 7.55, "C"],
+["🍾", "Champagne brut", "De Castellane · 75 cl", 20.1, "C"],
+["🥃", "Whisky J&B Rare", "bouteille de 70 cl", 14.65, "C"],
+["🥛", "Boisson végétale avoine bio", "Bjorg · brique de 1 L", 1.79, "C"],
+["🥤", "Coca-Cola goût original", "pack de 6 × 20 cl", 3.95, "C"],
+["⚡", "Red Bull", "canette de 25 cl", 1.19, "C"],
+["🥂", "Bourgogne Chardonnay en cubi", "La Cave d'Augustin Florent · 2,25 L", 18.95, "C"],
+["🍋", "Limonade artisanale au citron bio", "Lorina · 1,25 L", 2.49, "C"],
+["🍷", "Bordeaux rouge n°12", "Bernard Magrez · 75 cl", 4.86, "C"],
+["🧃", "Jus fruit du dragon et goyave", "Pago · 75 cl", 2.49, "C"],
+["🍊", "Nectar d'orange bio", "Pressade · brique de 1,5 L", 1.99, "C"],
+["💧", "Eau gazeuse aromatisée citron", "Maison Perrier · pack de 6 × 50 cl", 4.38, "C"],
+["🍓", "Sirop de grenadine bio", "La Maison Guiot · 50 cl", 3.39, "C"],
+["🧃", "Jus de grenade pur jus bio", "Carrefour Bio · 1 L", 4.85, "C"],
+["🧃", "Jus de cranberry bio", "Force Bio · 1 L", 4.12, "C"],
+["☕", "Capsules Ristretto compatibles Nespresso", "L'Or · boîte de 30", 8.99, "C"],
+["🧋", "Concentré de café glacé caramel", "L'Or · bouteille de 485 ml", 5.49, "C"],
+["🥣", "Céréales Chocapic Protein", "Nestlé · boîte de 340 g", 2.89, "C"],
+["🫙", "Pâte à tartiner Nutella", "pot de 825 g", 6.49, "C"],
+["🍪", "Biscuits à l'avoine fourrés au beurre de cacahuète", "Koro · paquet de 180 g", 2.49, "C"],
+["🥞", "Crêpes au chocolat", "Whaou! · paquet de 256 g", 2.19, "C"],
+["🍑", "Compotes protéinées à la pêche", "Pom'Potes · paquet de 4", 2.95, "C"],
+["🍬", "Bonbons protéinés goût cola", "Joyfuel · sachet de 50 g", 2.39, "C"],
+["🍫", "Tablette de chocolat noir 85 % bio", "Ethiquable · 100 g", 2.99, "C"],
+["🍫", "Amandes enrobées chocolat au lait caramel salé", "Plesh · sachet de 90 g", 3.99, "C"],
+["🍬", "Chewing-gums menthe verte sans sucres", "Freedent White · 5 paquets de 10", 2.39, "C"],
+["🥣", "Céréales Trésor spéculoos", "Kellogg's · boîte de 375 g", 3.39, "C"],
+["🍫", "Chocolat au lait framboise et pépites blanches", "Carrefour Sensation · tablette de 180 g", 3.55, "C"],
+["💄", "Stick à lèvres Original", "Vaseline · 4,8 g", 2.09, "C"],
+["🧴", "Crème Cica réparation lissante", "Mixa · pot de 400 ml", 4.8, "C"],
+["🚿", "Huile lavante relipidante pour le corps", "Bioderma · flacon de 1 L", 13.99, "C"],
+["🧴", "Sérum anti-rougeurs Roséliane", "Uriage · flacon de 30 ml", 20.0, "C"],
+["🧴", "Sérum visage anti-rides pour peau mature", "Vichy · flacon de 30 ml", 30.95, "C"],
+["🧴", "Gel-crème hydratant Hydrance Aqua-Gel", "Avène · pot de 50 ml", 15.99, "C"],
+["🪥", "Dentifrice Professional émail renforcé", "Oral-B · lot de 2 tubes de 75 ml", 10.64, "C"],
+["🪒", "Tondeuse corps Labs Body", "Gillette", 49.5, "C"],
+["💄", "Fond de teint Healthy Mix Glow Tint", "Bourjois · flacon de 30 ml", 15.89, "C"],
+["🚿", "Gel douche Zero hypoallergénique", "Sanex · lot de 2 × 475 ml", 5.82, "C"],
+["💇", "Spray volume Big Hair Day", "Elseve · 200 ml", 13.99, "C"],
+["🧻", "Essuie-tout Ultra Power 3 plis", "Renova · 2 rouleaux", 3.99, "C"],
+["🧴", "Masque réparation à l'huile d'argan", "Herbal Essences · pot de 500 ml", 4.02, "C"],
+["🧴", "Déodorant spray Epic Fresh", "Axe · lot de 2", 6.23, "C"],
+["🧴", "Déodorant stick framboise et rose", "Dove · 75 ml", 3.21, "C"],
+["🧴", "Gel lavant corps et cheveux à l'amande douce", "Cadum · 500 ml", 4.49, "C"],
+["🧺", "Lessive concentrée bébé et peaux sensibles", "Maïa · poche de 33 lavages", 7.74, "C"],
+["🧺", "Lessive en feuilles", "Dr. Beckmann · paquet de 25 feuilles", 5.49, "C"],
+["🧼", "Détachant en poudre Oxi Action", "Vanish · pot de 480 g", 3.4, "C"],
+["🍽️", "Capsules lave-vaisselle Powerball Ultimate Plus", "Finish · sachet de 22", 7.15, "C"],
+["🧽", "Éponge grattante lavable", "Inga · à l'unité", 4.89, "C"],
+["🧺", "Lessive liquide Original", "Ariel · 1,35 L", 12.99, "C"],
+["🧺", "Lessive liquide Alpine", "Ariel · bidon de 3,15 L", 19.49, "C"],
+["🧺", "Lessive liquide premier prix", "Carrefour · bouteille de 1,98 L", 2.09, "C"],
+["🧴", "Lessive à la main hypoallergénique", "L'Arbre Vert · tube de 250 ml", 1.99, "C"],
+["🍦", "Mini cônes glacés chocolat et vanille", "Extrême · boîte de 8", 3.21, "C"],
+["🐟", "Filets de saumon rose du Pacifique", "Findus · 4 filets, 400 g", 8.39, "C"],
+["🥩", "Haché au bœuf à cuisiner", "Charal · sachet de 600 g", 8.19, "C"],
+["🫛", "Haricots verts extra-fins surgelés", "Bonduelle · sachet de 750 g", 3.49, "C"],
+["🍦", "Cônes glacés Kinder Bueno", "boîte de 6", 6.49, "C"],
+["🍟", "Frites Just au Four", "McCain · sachet de 910 g", 3.38, "C"],
+["🍕", "Pizza Air Fryer mozzarella", "Buitoni · 195 g", 2.17, "C"],
+["🍨", "Glace vanille Bourbon", "La Laitière · bac de 490 g", 3.99, "C"],
+["🍡", "Mochis glacés coco", "Carrefour Sensation · boîte de 6", 3.89, "C"],
+["🍰", "Omelette norvégienne glacée", "Carrefour Extra · 1 L", 4.89, "C"],
+["🍓", "Framboises enrobées de chocolat", "Franui · pot de 150 g", 5.99, "C"],
+["🍡", "Mochis glacés mangue-passion", "Little Moons · boîte de 6", 4.89, "C"],
+["📺", "TV Mini LED Samsung 65\" 4K 144 Hz", "TU65M80H (2026)", 779, "B"],
+["📺", "TV LED 32\" avec barre de son intégrée", "Essentielb 32LED600 (2026)", 169.99, "B"],
+["📺", "TV QLED 50\" 4K", "Essentielb 50QLED307", 349, "B"],
+["📺", "TV OLED LG 65\" 4K", "65C6 (2026)", 1899, "B"],
+["📺", "TV OLED Sony Bravia 6 55\"", "modèle 2026", 1199, "B"],
+["📺", "TV Mini LED Samsung 75\" 4K 144 Hz", "TU75M80H (2026)", 1099, "B"],
+["📺", "TV LED Samsung 55\" 4K", "TU55U8005H (2026)", 479, "B"],
+["📺", "TV OLED Philips 55\" Ambilight", "55OLED911 (2026)", 1899, "B"],
+["📺", "TV OLED LG 55\"", "55C6 (2026)", 1499, "B"],
+["📱", "Samsung Galaxy S26 Ultra", "256 Go, noir", 1469, "B"],
+["📱", "Google Pixel 11", "256 Go, noir", 899, "B"],
+["📱", "Samsung Galaxy Z Fold8 Ultra", "256 Go", 1999, "B"],
+["📱", "Xiaomi Redmi Note 17 Pro Max", "256 Go", 499.99, "B"],
+["📱", "Apple iPhone 17 Pro Max", "256 Go", 1379, "B"],
+["📱", "Apple iPhone 17 Pro", "256 Go", 1229, "B"],
+["📱", "Samsung Galaxy A17 5G", "128 Go", 259.99, "B"],
+["📱", "Samsung Galaxy Z Flip8", "256 Go", 1099, "B"],
+["📱", "Apple iPhone 14 reconditionné", "128 Go, batterie neuve", 429.99, "B"],
+["📱", "Google Pixel 11 Pro", "256 Go", 1099, "B"],
+["📱", "Samsung Galaxy S25+", "256 Go", 714.99, "B"],
+["🧊", "Réfrigérateur combiné Samsung", "RB34C605CS9", 749, "B"],
+["🧊", "Réfrigérateur combiné Hisense", "RB440N4AFD", 549, "B"],
+["🧊", "Réfrigérateur multiportes Beko", "B3RGNE544HXB", 999, "B"],
+["🧊", "Réfrigérateur combiné Smeg", "RC18XDNC", 699, "B"],
+["🧊", "Réfrigérateur multiportes Hisense", "RF815N4SESE", 1399, "B"],
+["🧊", "Réfrigérateur américain LG InstaView", "GSXE90EVDD", 1999, "B"],
+["🧊", "Réfrigérateur combiné Listo", "RCDL180-60hiv2", 349, "B"],
+["🧊", "Réfrigérateur américain Samsung", "RS70F64KEF", 1399, "B"],
+["🧺", "Lave-linge Haier 10 kg connecté", "HW100-B14367U-FR", 499, "B"],
+["🧺", "Lave-linge Indesit 9 kg", "BWE91296XWVFR", 369, "B"],
+["🧺", "Lave-linge LG 11 kg connecté", "F14X76WHST", 799, "B"],
+["🧺", "Lave-linge Samsung 10 kg noir avec autodosage", "WW10FG6U94LB", 699, "B"],
+["🧺", "Lave-linge compact Listo 7 kg", "LF714L2b", 279, "B"],
+["🧺", "Lave-linge Electrolux 9 kg", "EW6FI22914OV", 579, "B"],
+["🧺", "Lave-linge Candy 9 kg vapeur", "BR 49B8-S", 369, "B"],
+["🍲", "Micro-ondes Essentielb", "EM256N", 99.99, "B"],
+["🍲", "Micro-ondes grill Samsung", "MG23K3515AK", 119, "B"],
+["🍲", "Micro-ondes Cecotec 20 L", "Proclean 3050", 68.9, "B"],
+["🍲", "Four 7 en 1 Hisense (micro-ondes, airfryer, four à pizza…)", "H28S01", 399.99, "B"],
+["🍲", "Micro-ondes Listo", "MOM L9", 49.99, "B"],
+["🍲", "Micro-ondes encastrable Miele", "M 2230 SC", 799, "B"],
+["🍲", "Micro-ondes combiné Whirlpool", "MWSC9133SX", 369, "B"],
+["🎮", "Console PlayStation 5 Standard", "Sony · châssis E", 649.99, "B"],
+["🎮", "Console Nintendo Switch 2", "", 469.99, "B"],
+["🎮", "PlayStation Portal", "Sony · lecteur à distance pour PS5", 249.99, "B"],
+["🎮", "Console PlayStation 5 Slim Digital", "Sony · châssis E", 599.99, "B"],
+["🎮", "Console Xbox Series X 1 To", "Microsoft", 799.99, "B"],
+["🎮", "Console Nintendo Switch OLED", "blanche", 339.99, "B"],
+["🎮", "Console Nintendo Switch Lite", "bleue", 229.99, "B"]
 ];
+const PRIX_SHOPS={C:"carrefour.fr",B:"boulanger.com"};
+const PRIX_DATE="9 octobre 2026";
 const PRIX_ORDER = seededShuffle(PRIX_ITEMS.map((_,i)=>i), 550055);
 const PRIX_DAY = 5, PRIX_TRIES = 10;
-const fmtEur = v => (v<10 ? v.toFixed(2) : Math.round(v).toLocaleString("fr-FR")).replace(".",",").replace(",00","") + " €";
-const fmtExact = v => v<10 ? v.toFixed(2).replace(".",",")+" €" : Math.round(v).toLocaleString("fr-FR")+" €";
+const fmtEur = v => (Number.isInteger(v) ? v : Math.round(v*100)/100).toLocaleString("fr-FR",{minimumFractionDigits:Number.isInteger(v)?0:2, maximumFractionDigits:2}) + " €";
+const fmtExact = fmtEur;
 function prixOk(g, p){ return p<10 ? Math.abs(g-p) < 0.051 : Math.abs(g-p) <= Math.max(0.5, p*0.02); }
 
 const Prix = {
   st:null,
-  key(){ return PLAYS.prix==="daily" ? "caviarde.prix.daily" : "caviarde.prix.free"; },
+  key(){ return PLAYS.prix==="daily" ? "caviarde.prix2.daily" : "caviarde.prix2.free"; },
   stats(){ return Object.assign({objets:0,trouves:0,essais:0,hist:{},streak:0,lastWin:null}, lsGet("caviarde.prix.stats",{})); },
   boot(){
     $("pBanner").hidden=true;
@@ -1717,12 +1763,12 @@ const Prix = {
     }
   },
   fresh(){
-    const played=lsGet("caviarde.prix.played",[]);
+    const played=lsGet("caviarde.prix2.played",[]);
     const today=new Set(Array.from({length:PRIX_DAY},(_,k)=>PRIX_ORDER[(((todayInfo().n-1)*PRIX_DAY)+k)%PRIX_ORDER.length]));
     let pool=PRIX_ITEMS.map((_,i)=>i).filter(i=>!played.includes(i) && !today.has(i));
-    if(!pool.length){ lsSet("caviarde.prix.played",[]); pool=PRIX_ITEMS.map((_,i)=>i).filter(i=>!today.has(i)); }
+    if(!pool.length){ lsSet("caviarde.prix2.played",[]); pool=PRIX_ITEMS.map((_,i)=>i).filter(i=>!today.has(i)); }
     const i=pool[Math.floor(Math.random()*pool.length)];
-    played.push(i); lsSet("caviarde.prix.played",played);
+    played.push(i); lsSet("caviarde.prix2.played",played);
     this.load({daily:null, list:[i], cur:0, rounds:[{g:[],h:0,done:false,won:false}], over:false});
     $("pFb").textContent="Nouvel objet : à combien l'estimez-vous ?";
   },
@@ -1812,12 +1858,13 @@ const Prix = {
   },
   render(){
     const st=this.st; if(!st) return;
-    const [emo,name,det,p]=this.item(), r=this.round();
+    const [emo,name,det,p,shop]=this.item(), r=this.round();
     $("meta").textContent = (st.daily?`Juste prix du jour n°${st.daily.n} · objet ${st.cur+1}/${st.list.length}`:"Juste prix");
     // progression du jour
     const dots=$("pDots"); dots.replaceChildren(); dots.hidden=!st.daily;
     if(st.daily) st.rounds.forEach((x,i)=>{ const s=document.createElement("span"); s.className="pdot"+(x.done?(x.won?" won":" lost"):"")+(i===st.cur?" cur":""); s.textContent=x.done?(x.won?this.used(x):"✕"):(i+1); s.title=`Objet ${i+1}`; dots.append(s); });
-    $("pEmo").textContent=emo; $("pName").textContent=name; $("pDet").textContent=det;
+    $("pEmo").textContent=emo; $("pName").textContent=name; $("pDet").textContent=det; $("pDet").hidden=!det;
+    $("pSrc").textContent=`Prix en ligne relevé sur ${PRIX_SHOPS[shop]||"le site du magasin"} le ${PRIX_DATE}`;
     // fourchette
     const {lo,hi}=this.bounds(r,p);
     $("pLo").textContent = lo===null ? "0 €" : fmtEur(lo);
