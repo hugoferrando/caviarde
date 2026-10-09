@@ -334,17 +334,21 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
 .lgwrap>*{width:100%;max-width:30rem}
 .lgbox{position:relative;aspect-ratio:4/3;border:1.5px solid var(--ink);border-radius:14px;background:#FFFFFF;overflow:hidden;display:grid;place-items:center}
 .lgbox.empty::after{content:"…";font:700 3rem var(--f-mark);color:#9AA3AA}
-.lgbox img{position:absolute;top:12%;left:10%;width:80%;height:76%;object-fit:contain;transition:filter .5s ease}
+.lgbox img{position:absolute;top:12%;left:10%;width:80%;height:76%;object-fit:contain;opacity:0}
+.lgbox img.ready{opacity:1}
+.lgbox img.anim{transition:filter .5s ease}
 .lglevel{position:absolute;right:10px;bottom:8px;font:500 .72rem var(--f-num);color:#59626A;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:4px}
 .lglevel:empty{display:none}
 .lgcredit{font:500 .75rem var(--f-num);color:var(--ink-2);text-align:center;min-height:1em}
 .lgguesses{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .lgguesses li{padding:3px 10px;border-radius:14px;font-size:.92rem;border:1px solid var(--rule)}
 .lgguesses li.ko{color:var(--ink-2);text-decoration:line-through}
+.lgguesses li.skip{color:var(--ink-2);font-style:italic}
 .lgguesses li.ok{background:var(--ok);border-color:var(--ok);color:#FFFFFF}
+.lgactions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
 .lgnext{display:flex;justify-content:center}
 .lgnext:empty{display:none}
-@media (prefers-reduced-motion:reduce){.lgbox img{transition:none}}
+@media (prefers-reduced-motion:reduce){.lgbox img.anim{transition:none}}
 </style>
 </head>
 <body>
@@ -548,8 +552,11 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
     <label for="lgInput" hidden>Nom de la marque</label>
     <input id="lgInput" type="text" list="lgList" placeholder="La marque…" autocapitalize="off" spellcheck="false" enterkeyhint="send" maxlength="40">
     <button class="btn primary" type="submit" id="lgGo">Valider</button>
-    <button class="btn quiet" type="button" id="lgHint">Indice</button>
   </form>
+  <div class="lgactions">
+    <button class="btn" type="button" id="lgPass">Je ne sais pas</button>
+    <button class="btn quiet" type="button" id="lgHint">Indice</button>
+  </div>
   <datalist id="lgList"></datalist>
   <div class="fb pfb" id="lgFb" aria-live="polite"></div>
   <ul class="phints" id="lgHints" hidden></ul>
@@ -563,7 +570,7 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
       <div><dt>Essais en moyenne</dt><dd id="lgAvg">–</dd></div>
       <div><dt>Série du jour</dt><dd id="lgStreak">0</dd></div>
     </dl>
-    <p class="note">Le logo apparaît flouté et en noir et blanc, puis se précise à chaque erreur (6 essais). Les logos viennent de Wikimedia Commons ; les marques citées appartiennent à leurs propriétaires et ne sont pas associées à ce jeu.</p>
+    <p class="note">Le logo apparaît flouté, puis se précise à chaque erreur ou « Je ne sais pas » (6 essais). Les logos viennent de Wikimedia Commons ; les marques citées appartiennent à leurs propriétaires et ne sont pas associées à ce jeu.</p>
   </section>
 </main>
 
@@ -2403,7 +2410,14 @@ const Logos = {
   save(){ lsSet(this.key(), this.st); },
   brand(){ return BRANDS[this.st.items[this.st.cur]]; },
   round(){ return this.st.rounds[this.st.cur]; },
-  used(r){ return r.g.length + r.h; },
+  used(r){ return r.g.length + r.h + (r.p||0); },
+  pass(){
+    const st=this.st; if(!st || st.over) return;
+    const r=this.round(); if(r.done) return;
+    r.p=(r.p||0)+1;
+    if(this.used(r)>=LOGO_TRIES){ r.done=true; r.won=false; }
+    this.after(r, false, false, true);
+  },
   submit(raw){
     const st=this.st; if(!st || st.over) return;
     const r=this.round(); if(r.done) return;
@@ -2428,7 +2442,7 @@ const Logos = {
     if(r.h>=2){ const letters=brandKey(b[0]).length; out.push(`Commence par « ${b[0][0].toUpperCase()} », ${letters} lettres.`); }
     return out;
   },
-  after(r, win, fromHint){
+  after(r, win, fromHint, fromPass){
     const st=this.st, b=this.brand();
     if(r.done){
       const s=this.stats(); s.objets++; if(r.won){ s.trouves++; s.essais+=this.used(r); } lsSet("caviarde.logos.stats",s);
@@ -2438,7 +2452,7 @@ const Logos = {
     }else if(fromHint){
       $("lgFb").textContent="Indice : "+this.hintText(r).slice(-1)[0]+` (${LOGO_TRIES-this.used(r)} essais restants)`;
     }else{
-      $("lgFb").innerHTML=`<b>Raté !</b> Le logo se précise. <span class="pleft">${LOGO_TRIES-this.used(r)} essais restants</span>`;
+      $("lgFb").innerHTML=`${fromPass?"<b>Le logo se précise.</b>":"<b>Raté !</b> Le logo se précise."} <span class="pleft">${LOGO_TRIES-this.used(r)} essais restants</span>`;
     }
     this.save(); this.render();
   },
@@ -2473,6 +2487,9 @@ const Logos = {
     if(file){
       const urls=LogoData.urls(file);
       if(img.dataset.file!==file){
+        img.classList.remove("ready","anim");
+        img.style.filter=`blur(${blur}px)`;
+        img.onload=()=>{ img.style.filter=`blur(${img.dataset.blur||blur}px)`; img.classList.add("ready"); requestAnimationFrame(()=>requestAnimationFrame(()=>img.classList.add("anim"))); };
         img.dataset.file=file; img.dataset.step="0"; img.src=urls[0];
         img.onerror=()=>{
           const n=Number(img.dataset.step||0)+1;
@@ -2484,12 +2501,13 @@ const Logos = {
       // précharger les logos suivants de la série
       if(st.daily) for(const j of st.items.slice(st.cur+1, st.cur+3)){ const f=LogoData.map[j]; if(f){ const pre=new Image(); pre.referrerPolicy="no-referrer"; pre.src=LogoData.urls(f)[0]; } }
     }
-    img.style.filter = `blur(${blur}px)` + (used<3 && !r.done ? " grayscale(1)" : "");
+    img.dataset.blur=String(blur);
+    img.style.filter = `blur(${blur}px)`;
     $("lgLevel").textContent = r.done ? "" : `Netteté ${Math.round(100*(LOGO_BLUR[0]-blur)/LOGO_BLUR[0])} %`;
     $("lgCredit").textContent = r.done && file ? `${b[0]} · logo : Wikimedia Commons` : "";
     const ht=this.hintText(r); $("lgHints").replaceChildren(...ht.map(t=>{ const li=document.createElement("li"); li.textContent=t; return li; })); $("lgHints").hidden=!ht.length;
-    const ul=$("lgGuesses"); ul.replaceChildren(...r.g.map(g=>{ const li=document.createElement("li"); li.textContent=g; li.className=brandMatches(g,b)?"ok":"ko"; return li; }));
-    $("lgInput").disabled=r.done; $("lgGo").disabled=r.done; $("lgHint").disabled=r.done || r.h>=2;
+    const ul=$("lgGuesses"); ul.replaceChildren(...r.g.map(g=>{ const li=document.createElement("li"); li.textContent=g; li.className=brandMatches(g,b)?"ok":"ko"; return li; }), ...Array.from({length:r.p||0},()=>{ const li=document.createElement("li"); li.textContent="je ne sais pas"; li.className="skip"; return li; }));
+    $("lgInput").disabled=r.done; $("lgGo").disabled=r.done; $("lgHint").disabled=r.done || r.h>=2; $("lgPass").disabled=r.done;
     const nx=$("lgNext"); nx.replaceChildren();
     if(st.daily && r.done && !st.over){ const bt=document.createElement("button"); bt.className="btn primary"; bt.type="button"; bt.textContent=`Logo suivant (${st.cur+2}/${st.items.length})`; bt.onclick=()=>this.next(); nx.append(bt); }
     const s=this.stats();
@@ -2507,6 +2525,7 @@ const Logos = {
 };
 $("lgForm").addEventListener("submit",e=>{ e.preventDefault(); const v=$("lgInput").value; $("lgInput").value=""; Logos.submit(v); });
 $("lgHint").addEventListener("click",()=>Logos.hint());
+$("lgPass").addEventListener("click",()=>Logos.pass());
 
 /* ---------- Indices ---------- */
 function hintArticle(){
