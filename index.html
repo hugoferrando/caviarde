@@ -2259,87 +2259,140 @@ function brandMatches(guess, b){
   return keys.some(k=>k===g || (k.length>=6 && lev(k,g)<=1));
 }
 
+function md5(str){
+  const bytes=new TextEncoder().encode(str);
+  const K=new Uint32Array(64), S=[7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+  for(let i=0;i<64;i++) K[i]=Math.floor(Math.abs(Math.sin(i+1))*4294967296)>>>0;
+  const len=bytes.length, nBlocks=((len+8)>>>6)+1, M=new Uint32Array(nBlocks*16);
+  for(let i=0;i<len;i++) M[i>>2]|=bytes[i]<<((i%4)*8);
+  M[len>>2]|=0x80<<((len%4)*8);
+  M[nBlocks*16-2]=(len*8)>>>0; M[nBlocks*16-1]=Math.floor(len/536870912)>>>0;
+  let a0=0x67452301,b0=0xefcdab89,c0=0x98badcfe,d0=0x10325476;
+  for(let blk=0;blk<nBlocks;blk++){
+    let A=a0,B=b0,C=c0,D=d0;
+    for(let i=0;i<64;i++){
+      let F,g;
+      if(i<16){F=(B&C)|(~B&D);g=i;}
+      else if(i<32){F=(D&B)|(~D&C);g=(5*i+1)%16;}
+      else if(i<48){F=B^C^D;g=(3*i+5)%16;}
+      else{F=C^(B|~D);g=(7*i)%16;}
+      const tmp=D; D=C; C=B;
+      const x=(A+F+K[i]+M[blk*16+g])>>>0;
+      B=(B+((x<<S[i])|(x>>>(32-S[i]))))>>>0; A=tmp;
+    }
+    a0=(a0+A)>>>0;b0=(b0+B)>>>0;c0=(c0+C)>>>0;d0=(d0+D)>>>0;
+  }
+  return [a0,b0,c0,d0].map(v=>[0,1,2,3].map(k=>((v>>>(k*8))&255).toString(16).padStart(2,"0")).join("")).join("");
+}
+
 const LogoData = {
   map:null,
-  async load(){
-    if(this.map) return this.map;
-    const c=lsGet("caviarde.logos",null);
-    if(c && Date.now()-c.t < 20*86400000 && c.m && Object.keys(c.m).length>20){ this.map=c.m; return this.map; }
-    const map={};
-    const pass = async (site, col) => {
-      const todo=BRANDS.map((b,i)=>[i,b[col]]).filter(([i,t])=>t && !map[i]);
-      for(let s=0; s<todo.length; s+=40){
-        const chunk=todo.slice(s,s+40);
-        const r=await fetch(`https://${site}.wikipedia.org/w/api.php?action=query&prop=pageprops&ppprop=wikibase_item&redirects=1&format=json&formatversion=2&origin=*&titles=${encodeURIComponent(chunk.map(x=>x[1]).join("|"))}`);
-        if(!r.ok) continue;
-        const j=await r.json(), q=j.query||{};
+  init(){
+    if(this.map) return;
+    const c=lsGet("caviarde.logos2",null);
+    this.map = (c && Date.now()-c.t < 30*86400000 && c.m) ? c.m : {};
+  },
+  save(){ lsSet("caviarde.logos2",{t:Date.now(), m:this.map}); },
+  async pass(site, col, list){
+    const chunks=[]; for(let s=0;s<list.length;s+=40) chunks.push(list.slice(s,s+40));
+    await Promise.all(chunks.map(async chunk=>{
+      try{
+        const items=chunk.map(i=>[i,BRANDS[i][col]]).filter(x=>x[1]);
+        if(!items.length) return;
+        const r=await fetch(`https://${site}.wikipedia.org/w/api.php?action=query&prop=pageprops&ppprop=wikibase_item&redirects=1&format=json&formatversion=2&origin=*&titles=${encodeURIComponent(items.map(x=>x[1]).join("|"))}`);
+        if(!r.ok) return;
+        const q=(await r.json()).query||{};
         const follow=t=>{ for(const n of q.normalized||[]) if(n.from===t) t=n.to; for(const n of q.redirects||[]) if(n.from===t) t=n.to; return t; };
         const qid={}; for(const pg of q.pages||[]) if(pg.pageprops?.wikibase_item) qid[pg.title]=pg.pageprops.wikibase_item;
-        const pairs=chunk.map(([i,t])=>[i,qid[follow(t)]]).filter(x=>x[1]);
-        if(!pairs.length) continue;
-        const r2=await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&props=claims&format=json&origin=*&ids=${pairs.map(x=>x[1]).join("|")}`);
-        if(!r2.ok) continue;
-        const ents=(await r2.json()).entities||{};
+        const pairs=items.map(([i,t])=>[i,qid[follow(t)]]);
+        const ids=[...new Set(pairs.map(x=>x[1]).filter(Boolean))];
+        let ents={};
+        if(ids.length){
+          const r2=await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&props=claims&format=json&origin=*&ids=${ids.join("|")}`);
+          if(!r2.ok) return;
+          ents=(await r2.json()).entities||{};
+        }
         for(const [i,id] of pairs){
-          const cl=(ents[id]?.claims?.P154||[]).filter(x=>x.rank!=="deprecated" && x.mainsnak?.datavalue?.value);
-          if(!cl.length) continue;
+          const cl=(id && ents[id]?.claims?.P154||[]).filter(x=>x.rank!=="deprecated" && x.mainsnak?.datavalue?.value);
+          if(!cl.length){ if(!this.map[i]) this.map[i]=(site==="en"?"":(this.map[i]||null)); continue; }
           const cur=cl.filter(x=>!x.qualifiers?.P582);
           const pick=(cur.find(x=>x.rank==="preferred")||cur[cur.length-1]||cl.find(x=>x.rank==="preferred")||cl[cl.length-1]);
-          map[i]=pick.mainsnak.datavalue.value;
+          this.map[i]=pick.mainsnak.datavalue.value;
         }
-      }
-    };
-    await pass("fr",2);
-    await pass("en",3);
-    if(Object.keys(map).length<10) throw new Error("logos indisponibles");
-    this.map=map; lsSet("caviarde.logos",{t:Date.now(), m:map});
-    return map;
+      }catch(e){}
+    }));
   },
-  url(file, w=600){ return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${w}`; }
+  async resolve(list){
+    this.init();
+    const need=list.filter(i=>this.map[i]===undefined || this.map[i]===null);
+    if(!need.length) return;
+    await this.pass("fr",2,need);
+    const miss=need.filter(i=>!this.map[i]);
+    if(miss.length) await this.pass("en",3,miss);
+    this.save();
+  },
+  warm(){ if(this.warming) return; this.warming=true; setTimeout(()=>this.resolve(BRANDS.map((_,i)=>i)).finally(()=>{ this.warming=false; }), 1500); },
+  has(i){ return !!(this.map && this.map[i]); },
+  // lien direct vers la miniature sur upload.wikimedia.org (évite une redirection)
+  urls(file){
+    const name=String(file).replace(/ /g,"_"), h=md5(name), enc=encodeURIComponent(name);
+    const svg=/\.svg$/i.test(name);
+    return [
+      `https://upload.wikimedia.org/wikipedia/commons/thumb/${h[0]}/${h.slice(0,2)}/${enc}/500px-${enc}${svg?".png":""}`,
+      svg ? `https://upload.wikimedia.org/wikipedia/commons/thumb/${h[0]}/${h.slice(0,2)}/${enc}/330px-${enc}.png` : `https://upload.wikimedia.org/wikipedia/commons/${h[0]}/${h.slice(0,2)}/${enc}`,
+      `https://commons.wikimedia.org/wiki/Special:FilePath/${enc}?width=500`
+    ];
+  }
 };
 
 const Logos = {
   st:null, loading:false,
   key(){ return PLAYS.logos==="daily" ? "caviarde.logos.daily" : "caviarde.logos.free"; },
   stats(){ return Object.assign({objets:0,trouves:0,essais:0,hist:{},streak:0,lastWin:null}, lsGet("caviarde.logos.stats",{})); },
-  dailyList(map, n){
-    const avail=BRAND_ORDER.filter(i=>map[i]); if(!avail.length) return [];
-    const s=((n-1)*LOGO_DAY)%avail.length;
-    return Array.from({length:LOGO_DAY},(_,k)=>avail[(s+k)%avail.length]);
-  },
+  dailyCandidates(n){ const L=BRAND_ORDER.length, s=((n-1)*7)%L; return Array.from({length:16},(_,k)=>BRAND_ORDER[(s+k)%L]); },
   async boot(){
     $("lgBanner").hidden=true;
     if(this.loading) return;
-    let map;
-    try{
-      this.loading=true; this.showMsg("Chargement des logos…");
-      map=await LogoData.load();
-    }catch(e){
-      this.loading=false;
-      this.showMsg("Impossible de charger les logos pour le moment (Wikipédia ne répond pas). Réessayez plus tard.");
-      return;
-    }
-    this.loading=false;
+    LogoData.init();
+    const dl=$("lgList"); if(!dl.children.length){ for(const b of [...BRANDS].sort((a,b)=>a[0].localeCompare(b[0],"fr"))){ const o=document.createElement("option"); o.value=b[0]; dl.append(o); } }
     const saved=lsGet(this.key(),null);
     if(PLAYS.logos==="daily"){
       const d=todayInfo();
-      if(saved && saved.daily?.date===d.date) this.load(saved);
-      else { const items=this.dailyList(map,d.n); this.load({daily:d, items, cur:0, rounds:items.map(()=>({g:[],h:0,done:false,won:false})), over:false}); }
+      if(saved && saved.daily?.date===d.date && saved.items?.every(i=>LogoData.has(i))) this.load(saved);
+      else{
+        this.loading=true; this.showMsg("Chargement des logos du jour…");
+        const cands=this.dailyCandidates(d.n);
+        await LogoData.resolve(cands);
+        this.loading=false;
+        const items=cands.filter(i=>LogoData.has(i)).slice(0,LOGO_DAY);
+        if(!items.length){ this.showMsg("Impossible de charger les logos pour le moment (Wikipédia ne répond pas). Réessayez plus tard."); return; }
+        this.load(saved && saved.daily?.date===d.date ? saved : {daily:d, items, cur:0, rounds:items.map(()=>({g:[],h:0,done:false,won:false})), over:false});
+      }
     }else{
-      if(saved && saved.items && map[saved.items[0]]) this.load(saved); else this.fresh();
+      if(saved && saved.items && LogoData.has(saved.items[0])) this.load(saved); else await this.fresh();
     }
-    const dl=$("lgList"); if(!dl.children.length){ for(const b of [...BRANDS].sort((a,b)=>a[0].localeCompare(b[0],"fr"))){ const o=document.createElement("option"); o.value=b[0]; dl.append(o); } }
+    LogoData.warm();
   },
-  showMsg(t){ $("lgFb").textContent=t; $("lgImg").removeAttribute("src"); $("lgImg").hidden=true; $("lgBox").classList.add("empty"); },
-  fresh(){
-    const map=LogoData.map||{};
+  showMsg(t){ $("lgFb").textContent=t; $("lgImg").removeAttribute("src"); $("lgImg").hidden=true; $("lgBox").classList.add("empty"); $("lgDots").hidden=true; },
+  async fresh(){
+    if(this.loading) return;
     const played=lsGet("caviarde.logos.played",[]);
-    const today=new Set(this.dailyList(map,todayInfo().n));
-    let pool=BRANDS.map((_,i)=>i).filter(i=>map[i] && !played.includes(i) && !today.has(i));
-    if(!pool.length){ lsSet("caviarde.logos.played",[]); pool=BRANDS.map((_,i)=>i).filter(i=>map[i] && !today.has(i)); }
-    const i=pool[Math.floor(Math.random()*pool.length)];
-    played.push(i); lsSet("caviarde.logos.played",played);
-    this.load({daily:null, items:[i], cur:0, rounds:[{g:[],h:0,done:false,won:false}], over:false});
+    const today=new Set(this.dailyCandidates(todayInfo().n));
+    const okI=i=>!played.includes(i) && !today.has(i) && LogoData.map[i]!=="";
+    let pool=BRANDS.map((_,i)=>i).filter(okI);
+    if(!pool.length){ lsSet("caviarde.logos.played",[]); pool=BRANDS.map((_,i)=>i).filter(i=>!today.has(i) && LogoData.map[i]!==""); }
+    pool.sort(()=>Math.random()-0.5);
+    let pick=pool.find(i=>LogoData.has(i));
+    if(pick===undefined){
+      this.loading=true; this.showMsg("Chargement du logo…");
+      const cand=pool.slice(0,8);
+      await LogoData.resolve(cand);
+      this.loading=false;
+      pick=cand.find(i=>LogoData.has(i));
+    }
+    if(pick===undefined){ this.showMsg("Impossible de charger un logo pour le moment (Wikipédia ne répond pas). Réessayez plus tard."); return; }
+    played.push(pick); lsSet("caviarde.logos.played",played);
+    this.load({daily:null, items:[pick], cur:0, rounds:[{g:[],h:0,done:false,won:false}], over:false});
     $("lgFb").textContent="Nouveau logo : quelle est cette marque ?";
   },
   load(st){
@@ -2400,7 +2453,7 @@ const Logos = {
   next(){
     const st=this.st;
     if(st.daily){ if(st.cur<st.items.length-1){ st.cur++; this.save(); $("lgFb").textContent=`Logo ${st.cur+1}/${st.items.length} : quelle est cette marque ?`; this.render(); $("lgInput").focus({preventScroll:true}); } }
-    else { this.fresh(); $("lgInput").focus({preventScroll:true}); }
+    else { this.fresh().then(()=>$("lgInput").focus({preventScroll:true})); }
   },
   share(box){
     const st=this.st, em=st.rounds.map(r=>r.won?`✅${this.used(r)}`:"❌").join(" ");
@@ -2410,7 +2463,7 @@ const Logos = {
   },
   render(){
     const st=this.st; if(!st) return;
-    const b=this.brand(), r=this.round(), file=(LogoData.map||{})[st.items[st.cur]];
+    const b=this.brand(), r=this.round(), file=(LogoData.map||{})[st.items[st.cur]]||"";
     $("meta").textContent = st.daily ? `Logos du jour n°${st.daily.n} · logo ${st.cur+1}/${st.items.length}` : "Logos";
     const dots=$("lgDots"); dots.replaceChildren(); dots.hidden=!st.daily;
     if(st.daily) st.rounds.forEach((x,i)=>{ const s=document.createElement("span"); s.className="pdot"+(x.done?(x.won?" won":" lost"):"")+(i===st.cur?" cur":""); s.textContent=x.done?(x.won?this.used(x):"✕"):(i+1); dots.append(s); });
@@ -2418,10 +2471,18 @@ const Logos = {
     const used=this.used(r), blur=r.done?0:LOGO_BLUR[Math.min(used,LOGO_BLUR.length-1)];
     box.classList.remove("empty");
     if(file){
-      const u=LogoData.url(file);
-      if(img.getAttribute("src")!==u){ img.src=u; }
+      const urls=LogoData.urls(file);
+      if(img.dataset.file!==file){
+        img.dataset.file=file; img.dataset.step="0"; img.src=urls[0];
+        img.onerror=()=>{
+          const n=Number(img.dataset.step||0)+1;
+          if(n<urls.length){ img.dataset.step=String(n); img.src=urls[n]; }
+          else { img.hidden=true; box.classList.add("empty"); $("lgFb").textContent="Ce logo ne se charge pas. Passez au suivant."; }
+        };
+      }
       img.hidden=false;
-      img.onerror=()=>{ img.hidden=true; box.classList.add("empty"); $("lgFb").textContent="Ce logo ne se charge pas. Passez au suivant."; };
+      // précharger les logos suivants de la série
+      if(st.daily) for(const j of st.items.slice(st.cur+1, st.cur+3)){ const f=LogoData.map[j]; if(f){ const pre=new Image(); pre.referrerPolicy="no-referrer"; pre.src=LogoData.urls(f)[0]; } }
     }
     img.style.filter = `blur(${blur}px)` + (used<3 && !r.done ? " grayscale(1)" : "");
     $("lgLevel").textContent = r.done ? "" : `Netteté ${Math.round(100*(LOGO_BLUR[0]-blur)/LOGO_BLUR[0])} %`;
