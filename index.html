@@ -325,8 +325,26 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
 .pstats{margin-top:8px}
 @media (max-width:560px){
   .top .wrap .games{display:flex;width:100%;order:3}
-  .top .wrap .games button{flex:1 1 auto;padding:.55em .3em;font-size:.84rem}
+  .top .wrap .games{overflow-x:auto;scrollbar-width:none}
+  .top .wrap .games button{flex:1 0 auto;padding:.55em .45em;font-size:.82rem;white-space:nowrap}
 }
+
+/* Logos */
+.lgwrap{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;gap:14px;padding-block:22px 56px}
+.lgwrap>*{width:100%;max-width:30rem}
+.lgbox{position:relative;aspect-ratio:4/3;border:1.5px solid var(--ink);border-radius:14px;background:#FFFFFF;overflow:hidden;display:grid;place-items:center}
+.lgbox.empty::after{content:"…";font:700 3rem var(--f-mark);color:#9AA3AA}
+.lgbox img{position:absolute;top:12%;left:10%;width:80%;height:76%;object-fit:contain;transition:filter .5s ease}
+.lglevel{position:absolute;right:10px;bottom:8px;font:500 .72rem var(--f-num);color:#59626A;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:4px}
+.lglevel:empty{display:none}
+.lgcredit{font:500 .75rem var(--f-num);color:var(--ink-2);text-align:center;min-height:1em}
+.lgguesses{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.lgguesses li{padding:3px 10px;border-radius:14px;font-size:.92rem;border:1px solid var(--rule)}
+.lgguesses li.ko{color:var(--ink-2);text-decoration:line-through}
+.lgguesses li.ok{background:var(--ok);border-color:var(--ok);color:#FFFFFF}
+.lgnext{display:flex;justify-content:center}
+.lgnext:empty{display:none}
+@media (prefers-reduced-motion:reduce){.lgbox img{transition:none}}
 </style>
 </head>
 <body>
@@ -338,6 +356,7 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
       <button type="button" data-g="chaud" aria-pressed="false">Chaud-froid</button>
       <button type="button" data-g="lettres" aria-pressed="false">Lettres</button>
       <button type="button" data-g="prix" aria-pressed="false">Juste prix</button>
+      <button type="button" data-g="logos" aria-pressed="false">Logos</button>
     </div>
     <div class="modes" role="group" aria-label="Mode de jeu">
       <button type="button" id="mDaily" aria-pressed="false">Du jour</button>
@@ -513,6 +532,38 @@ html,body,button,input,.h,.lcell,.kb,.kb button,.games,.modes{touch-action:manip
       <div><dt>Série du jour</dt><dd id="pStreak">0</dd></div>
     </dl>
     <p class="note">Le prix est trouvé à 2 % près (à 5 centimes près sous 10 €). En illimité, les produits viennent au hasard d'<a href="https://prices.openfoodfacts.org" target="_blank" rel="noopener">Open Prices</a>, des prix relevés en magasin par la communauté Open Food Facts (données sous licence ODbL, photos sous CC BY-SA ; photos d'illustration de Wikipédia/Wikimedia Commons pour la tech et l'électroménager), et d'un relevé de prix en ligne sur carrefour.fr et boulanger.com du 9 octobre 2026. Le juste prix du jour vient de ce relevé. Les prix ont pu changer depuis.</p>
+  </section>
+</main>
+
+
+<main class="wrap lgwrap" id="logosMain" hidden>
+  <div id="lgBanner" hidden></div>
+  <div class="pdots" id="lgDots"></div>
+  <div class="lgbox" id="lgBox">
+    <img id="lgImg" alt="Logo à deviner" referrerpolicy="no-referrer" hidden>
+    <span class="lglevel" id="lgLevel"></span>
+  </div>
+  <div class="lgcredit" id="lgCredit"></div>
+  <form class="guess" id="lgForm" autocomplete="off">
+    <label for="lgInput" hidden>Nom de la marque</label>
+    <input id="lgInput" type="text" list="lgList" placeholder="La marque…" autocapitalize="off" spellcheck="false" enterkeyhint="send" maxlength="40">
+    <button class="btn primary" type="submit" id="lgGo">Valider</button>
+    <button class="btn quiet" type="button" id="lgHint">Indice</button>
+  </form>
+  <datalist id="lgList"></datalist>
+  <div class="fb pfb" id="lgFb" aria-live="polite"></div>
+  <ul class="phints" id="lgHints" hidden></ul>
+  <ul class="lgguesses" id="lgGuesses"></ul>
+  <div id="lgNext" class="lgnext"></div>
+  <section class="sec pstats">
+    <h2><span>Vos parties</span></h2>
+    <dl class="stats stats4">
+      <div><dt>Logos joués</dt><dd id="lgObj">0</dd></div>
+      <div><dt>Marques trouvées</dt><dd id="lgFound">0</dd></div>
+      <div><dt>Essais en moyenne</dt><dd id="lgAvg">–</dd></div>
+      <div><dt>Série du jour</dt><dd id="lgStreak">0</dd></div>
+    </dl>
+    <p class="note">Le logo apparaît flouté et en noir et blanc, puis se précise à chaque erreur (6 essais). Les logos viennent de Wikimedia Commons ; les marques citées appartiennent à leurs propriétaires et ne sont pas associées à ce jeu.</p>
   </section>
 </main>
 
@@ -744,7 +795,7 @@ async function loadDaily(){
   startArticle(art);
   if(offline) feedback('<span class="warnline">Wikipédia est injoignable : l\'article du jour de secours est affiché. Rechargez la page plus tard pour le vrai.</span>');
 }
-const GAMES=["article","chaud","lettres","prix"];
+const GAMES=["article","chaud","lettres","prix","logos"];
 let GAME = GAMES.includes(lsGet("caviarde.jeu","article")) ? lsGet("caviarde.jeu","article") : "article";
 const playKey = g => g==="article" ? "caviarde.play" : "caviarde.play."+g;
 const PLAYS = Object.fromEntries(GAMES.map(g=>[g, lsGet(playKey(g),"daily")==="free"?"free":"daily"]));
@@ -757,8 +808,9 @@ function boot(){
   $("chaudMain").hidden = GAME!=="chaud";
   $("lettresMain").hidden = GAME!=="lettres";
   $("prixMain").hidden = GAME!=="prix";
+  $("logosMain").hidden = GAME!=="logos";
   $("skip").hidden = GAME!=="article" || !ST || ST.done;
-  if(GAME==="article") bootArticle(); else if(GAME==="chaud") Chaud.boot(); else if(GAME==="prix") Prix.boot(); else Lettres.boot();
+  if(GAME==="article") bootArticle(); else if(GAME==="chaud") Chaud.boot(); else if(GAME==="prix") Prix.boot(); else if(GAME==="logos") Logos.boot(); else Lettres.boot();
 }
 function bootArticle(){
   $("srcSec").hidden = PLAYS.article==="daily";
@@ -2055,6 +2107,345 @@ const Prix = {
 };
 $("pForm").addEventListener("submit",e=>{ e.preventDefault(); const v=$("pInput").value; $("pInput").value=""; Prix.submit(v); });
 $("pHint").addEventListener("click",()=>Prix.hint());
+
+
+/* ---------- Devine la marque (logos Wikimedia Commons) ---------- */
+// [nom affiché, catégorie, titre Wikipédia FR, titre Wikipédia EN, autres réponses acceptées…]
+const BRANDS = [
+["Renault","Automobile","Renault","Renault"],
+["Peugeot","Automobile","Peugeot","Peugeot"],
+["Citroën","Automobile","Citroën","Citroën","citroen"],
+["Volkswagen","Automobile","Volkswagen","Volkswagen","vw"],
+["BMW","Automobile","BMW","BMW"],
+["Mercedes-Benz","Automobile","Mercedes-Benz","Mercedes-Benz","mercedes"],
+["Audi","Automobile","Audi","Audi"],
+["Toyota","Automobile","Toyota","Toyota"],
+["Ferrari","Automobile","Ferrari","Ferrari"],
+["Porsche","Automobile","Porsche","Porsche"],
+["Lamborghini","Automobile","Lamborghini","Lamborghini"],
+["Tesla","Automobile","Tesla (entreprise)","Tesla, Inc."],
+["Fiat","Automobile","Fiat","Fiat Automobiles"],
+["Dacia","Automobile","Dacia","Automobile Dacia"],
+["Alfa Romeo","Automobile","Alfa Romeo","Alfa Romeo"],
+["Jeep","Automobile","Jeep","Jeep"],
+["Nissan","Automobile","Nissan","Nissan"],
+["Opel","Automobile","Opel","Opel"],
+["Ford","Automobile","Ford","Ford Motor Company"],
+["Chevrolet","Automobile","Chevrolet","Chevrolet"],
+["Mazda","Automobile","Mazda","Mazda"],
+["Suzuki","Automobile","Suzuki","Suzuki"],
+["Coca-Cola","Boisson","Coca-Cola","Coca-Cola","coca"],
+["Pepsi","Boisson","Pepsi","Pepsi"],
+["Red Bull","Boisson","Red Bull","Red Bull"],
+["Orangina","Boisson","Orangina","Orangina"],
+["Heineken","Boisson","Heineken","Heineken"],
+["Starbucks","Restauration","Starbucks","Starbucks"],
+["McDonald's","Restauration","McDonald's","McDonald's","mcdo","macdo","mc do"],
+["Burger King","Restauration","Burger King","Burger King","bk"],
+["KFC","Restauration","KFC","KFC","kentucky fried chicken"],
+["Subway","Restauration","Subway (restaurant)","Subway (restaurant)"],
+["Domino's","Restauration","Domino's Pizza","Domino's","dominos pizza"],
+["Nutella","Alimentation","Nutella","Nutella"],
+["Danone","Alimentation","Danone","Danone"],
+["Nestlé","Alimentation","Nestlé","Nestlé","nestle"],
+["Haribo","Alimentation","Haribo","Haribo"],
+["Milka","Alimentation","Milka","Milka"],
+["Oreo","Alimentation","Oreo","Oreo"],
+["Kellogg's","Alimentation","Kellogg's","Kellogg's","kelloggs"],
+["Lay's","Alimentation","Lay's","Lay's","lays"],
+["Pringles","Alimentation","Pringles","Pringles"],
+["Lindt","Alimentation","Lindt & Sprüngli","Lindt & Sprüngli"],
+["Apple","Tech","Apple","Apple Inc."],
+["Samsung","Tech","Samsung","Samsung"],
+["Google","Tech","Google","Google"],
+["Microsoft","Tech","Microsoft","Microsoft"],
+["Amazon","Tech","Amazon (entreprise)","Amazon (company)"],
+["Facebook","Réseau social","Facebook","Facebook"],
+["Instagram","Réseau social","Instagram","Instagram"],
+["WhatsApp","Réseau social","WhatsApp","WhatsApp"],
+["Snapchat","Réseau social","Snapchat","Snapchat"],
+["TikTok","Réseau social","TikTok","TikTok"],
+["YouTube","Réseau social","YouTube","YouTube"],
+["Discord","Réseau social","Discord","Discord"],
+["Twitch","Réseau social","Twitch","Twitch (service)"],
+["Netflix","Divertissement","Netflix","Netflix"],
+["Spotify","Divertissement","Spotify","Spotify"],
+["Deezer","Divertissement","Deezer","Deezer"],
+["Disney","Divertissement","The Walt Disney Company","The Walt Disney Company","walt disney"],
+["Pixar","Divertissement","Pixar Animation Studios","Pixar"],
+["Warner Bros.","Divertissement","Warner Bros.","Warner Bros.","warner","warner bros"],
+["Canal+","Divertissement","Canal+","Canal+","canal plus"],
+["TF1","Divertissement","TF1","TF1"],
+["Sony","Tech","Sony","Sony"],
+["Nintendo","Jeu vidéo","Nintendo","Nintendo"],
+["PlayStation","Jeu vidéo","PlayStation","PlayStation"],
+["Xbox","Jeu vidéo","Xbox","Xbox"],
+["Ubisoft","Jeu vidéo","Ubisoft","Ubisoft"],
+["Intel","Tech","Intel","Intel"],
+["Nvidia","Tech","Nvidia","Nvidia"],
+["Huawei","Tech","Huawei","Huawei"],
+["Xiaomi","Tech","Xiaomi","Xiaomi"],
+["Philips","Tech","Philips","Philips"],
+["Uber","Tech","Uber","Uber"],
+["Airbnb","Tech","Airbnb","Airbnb"],
+["Duolingo","Tech","Duolingo","Duolingo"],
+["Wikipédia","Tech","Wikipédia","Wikipedia","wikipedia"],
+["Firefox","Tech","Mozilla Firefox","Firefox","mozilla firefox"],
+["Android","Tech","Android","Android (operating system)"],
+["PayPal","Banque et paiement","PayPal","PayPal"],
+["Visa","Banque et paiement","Visa (entreprise)","Visa Inc."],
+["Mastercard","Banque et paiement","Mastercard","Mastercard"],
+["BNP Paribas","Banque et paiement","BNP Paribas","BNP Paribas","bnp"],
+["Société Générale","Banque et paiement","Société générale","Société Générale","socgen"],
+["Crédit Agricole","Banque et paiement","Crédit agricole","Crédit Agricole"],
+["Nike","Mode et sport","Nike (entreprise)","Nike, Inc."],
+["Adidas","Mode et sport","Adidas","Adidas"],
+["Puma","Mode et sport","Puma (entreprise)","Puma (brand)"],
+["Reebok","Mode et sport","Reebok","Reebok"],
+["Lacoste","Mode et sport","Lacoste (entreprise)","Lacoste"],
+["Le Coq Sportif","Mode et sport","Le Coq sportif","Le Coq Sportif","coq sportif"],
+["Converse","Mode et sport","Converse (entreprise)","Converse (shoe company)"],
+["Vans","Mode et sport","Vans","Vans"],
+["New Balance","Mode et sport","New Balance","New Balance"],
+["The North Face","Mode et sport","The North Face","The North Face","north face"],
+["Zara","Mode et sport","Zara (entreprise)","Zara (retailer)"],
+["H&M","Mode et sport","H&M","H&M","hm","h et m"],
+["Uniqlo","Mode et sport","Uniqlo","Uniqlo"],
+["Levi's","Mode et sport","Levi Strauss & Co.","Levi Strauss & Co.","levis","levi strauss"],
+["Chanel","Luxe","Chanel","Chanel"],
+["Louis Vuitton","Luxe","Louis Vuitton (entreprise)","Louis Vuitton","lv","vuitton"],
+["Gucci","Luxe","Gucci","Gucci"],
+["Dior","Luxe","Christian Dior (entreprise)","Dior","christian dior"],
+["Rolex","Luxe","Rolex","Rolex"],
+["Ray-Ban","Mode et sport","Ray-Ban","Ray-Ban","rayban"],
+["Decathlon","Commerce","Decathlon (entreprise)","Decathlon S.A."],
+["Carrefour","Commerce","Carrefour (entreprise)","Carrefour"],
+["E.Leclerc","Commerce","E.Leclerc","E.Leclerc","leclerc"],
+["Auchan","Commerce","Auchan","Auchan"],
+["Lidl","Commerce","Lidl","Lidl"],
+["Intermarché","Commerce","Intermarché","Intermarché","intermarche"],
+["Monoprix","Commerce","Monoprix","Monoprix"],
+["Fnac","Commerce","Fnac","Fnac"],
+["Darty","Commerce","Darty","Darty"],
+["Ikea","Commerce","IKEA","IKEA"],
+["Leroy Merlin","Commerce","Leroy Merlin","Leroy Merlin"],
+["Sephora","Commerce","Sephora","Sephora"],
+["SNCF","Transport","Société nationale SNCF","SNCF"],
+["RATP","Transport","Régie autonome des transports parisiens","RATP Group"],
+["Air France","Transport","Air France","Air France"],
+["Ryanair","Transport","Ryanair","Ryanair"],
+["easyJet","Transport","EasyJet","EasyJet"],
+["Airbus","Transport","Airbus","Airbus"],
+["La Poste","Services","La Poste (entreprise française)","La Poste (France)","poste"],
+["Orange","Services","Orange (entreprise)","Orange S.A."],
+["SFR","Services","SFR","SFR"],
+["Bouygues Telecom","Services","Bouygues Telecom","Bouygues Telecom","bouygues"],
+["TotalEnergies","Énergie","TotalEnergies","TotalEnergies","total"],
+["Shell","Énergie","Shell (entreprise)","Shell plc"],
+["Michelin","Industrie","Michelin","Michelin"],
+["L'Oréal","Beauté","L'Oréal","L'Oréal","loreal"],
+["Bic","Industrie","Société Bic","Bic (company)"],
+["Lego","Jouets","Lego","Lego"],
+["Playmobil","Jouets","Playmobil","Playmobil"]
+];
+const BRAND_ORDER = seededShuffle(BRANDS.map((_,i)=>i), 909090);
+const LOGO_DAY=5, LOGO_TRIES=6, LOGO_BLUR=[26,19,13,8,4,2,0];
+const brandKey = s => norm(String(s)).replace(/[^a-z0-9]/g,"");
+function lev(a,b){ if(Math.abs(a.length-b.length)>1) return 2; const d=Array.from({length:a.length+1},(_,i)=>[i]); for(let j=1;j<=b.length;j++) d[0][j]=j;
+  for(let i=1;i<=a.length;i++) for(let j=1;j<=b.length;j++) d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1)); return d[a.length][b.length]; }
+function brandMatches(guess, b){
+  const g=brandKey(guess); if(!g) return false;
+  const keys=[b[0], ...b.slice(4)].map(brandKey);
+  return keys.some(k=>k===g || (k.length>=6 && lev(k,g)<=1));
+}
+
+const LogoData = {
+  map:null,
+  async load(){
+    if(this.map) return this.map;
+    const c=lsGet("caviarde.logos",null);
+    if(c && Date.now()-c.t < 20*86400000 && c.m && Object.keys(c.m).length>20){ this.map=c.m; return this.map; }
+    const map={};
+    const pass = async (site, col) => {
+      const todo=BRANDS.map((b,i)=>[i,b[col]]).filter(([i,t])=>t && !map[i]);
+      for(let s=0; s<todo.length; s+=40){
+        const chunk=todo.slice(s,s+40);
+        const r=await fetch(`https://${site}.wikipedia.org/w/api.php?action=query&prop=pageprops&ppprop=wikibase_item&redirects=1&format=json&formatversion=2&origin=*&titles=${encodeURIComponent(chunk.map(x=>x[1]).join("|"))}`);
+        if(!r.ok) continue;
+        const j=await r.json(), q=j.query||{};
+        const follow=t=>{ for(const n of q.normalized||[]) if(n.from===t) t=n.to; for(const n of q.redirects||[]) if(n.from===t) t=n.to; return t; };
+        const qid={}; for(const pg of q.pages||[]) if(pg.pageprops?.wikibase_item) qid[pg.title]=pg.pageprops.wikibase_item;
+        const pairs=chunk.map(([i,t])=>[i,qid[follow(t)]]).filter(x=>x[1]);
+        if(!pairs.length) continue;
+        const r2=await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&props=claims&format=json&origin=*&ids=${pairs.map(x=>x[1]).join("|")}`);
+        if(!r2.ok) continue;
+        const ents=(await r2.json()).entities||{};
+        for(const [i,id] of pairs){
+          const cl=(ents[id]?.claims?.P154||[]).filter(x=>x.rank!=="deprecated" && x.mainsnak?.datavalue?.value);
+          if(!cl.length) continue;
+          const cur=cl.filter(x=>!x.qualifiers?.P582);
+          const pick=(cur.find(x=>x.rank==="preferred")||cur[cur.length-1]||cl.find(x=>x.rank==="preferred")||cl[cl.length-1]);
+          map[i]=pick.mainsnak.datavalue.value;
+        }
+      }
+    };
+    await pass("fr",2);
+    await pass("en",3);
+    if(Object.keys(map).length<10) throw new Error("logos indisponibles");
+    this.map=map; lsSet("caviarde.logos",{t:Date.now(), m:map});
+    return map;
+  },
+  url(file, w=600){ return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${w}`; }
+};
+
+const Logos = {
+  st:null, loading:false,
+  key(){ return PLAYS.logos==="daily" ? "caviarde.logos.daily" : "caviarde.logos.free"; },
+  stats(){ return Object.assign({objets:0,trouves:0,essais:0,hist:{},streak:0,lastWin:null}, lsGet("caviarde.logos.stats",{})); },
+  dailyList(map, n){
+    const avail=BRAND_ORDER.filter(i=>map[i]); if(!avail.length) return [];
+    const s=((n-1)*LOGO_DAY)%avail.length;
+    return Array.from({length:LOGO_DAY},(_,k)=>avail[(s+k)%avail.length]);
+  },
+  async boot(){
+    $("lgBanner").hidden=true;
+    if(this.loading) return;
+    let map;
+    try{
+      this.loading=true; this.showMsg("Chargement des logos…");
+      map=await LogoData.load();
+    }catch(e){
+      this.loading=false;
+      this.showMsg("Impossible de charger les logos pour le moment (Wikipédia ne répond pas). Réessayez plus tard.");
+      return;
+    }
+    this.loading=false;
+    const saved=lsGet(this.key(),null);
+    if(PLAYS.logos==="daily"){
+      const d=todayInfo();
+      if(saved && saved.daily?.date===d.date) this.load(saved);
+      else { const items=this.dailyList(map,d.n); this.load({daily:d, items, cur:0, rounds:items.map(()=>({g:[],h:0,done:false,won:false})), over:false}); }
+    }else{
+      if(saved && saved.items && map[saved.items[0]]) this.load(saved); else this.fresh();
+    }
+    const dl=$("lgList"); if(!dl.children.length){ for(const b of [...BRANDS].sort((a,b)=>a[0].localeCompare(b[0],"fr"))){ const o=document.createElement("option"); o.value=b[0]; dl.append(o); } }
+  },
+  showMsg(t){ $("lgFb").textContent=t; $("lgImg").removeAttribute("src"); $("lgImg").hidden=true; $("lgBox").classList.add("empty"); },
+  fresh(){
+    const map=LogoData.map||{};
+    const played=lsGet("caviarde.logos.played",[]);
+    const today=new Set(this.dailyList(map,todayInfo().n));
+    let pool=BRANDS.map((_,i)=>i).filter(i=>map[i] && !played.includes(i) && !today.has(i));
+    if(!pool.length){ lsSet("caviarde.logos.played",[]); pool=BRANDS.map((_,i)=>i).filter(i=>map[i] && !today.has(i)); }
+    const i=pool[Math.floor(Math.random()*pool.length)];
+    played.push(i); lsSet("caviarde.logos.played",played);
+    this.load({daily:null, items:[i], cur:0, rounds:[{g:[],h:0,done:false,won:false}], over:false});
+    $("lgFb").textContent="Nouveau logo : quelle est cette marque ?";
+  },
+  load(st){
+    this.st=st; this.save();
+    if(!st.over && !st.rounds[st.cur].g.length && !st.rounds[st.cur].h) $("lgFb").textContent = st.daily ? `Logos du jour n°${st.daily.n} : ${LOGO_DAY} marques à reconnaître, ${LOGO_TRIES} essais chacune.` : "Quelle est cette marque ?";
+    this.render();
+  },
+  save(){ lsSet(this.key(), this.st); },
+  brand(){ return BRANDS[this.st.items[this.st.cur]]; },
+  round(){ return this.st.rounds[this.st.cur]; },
+  used(r){ return r.g.length + r.h; },
+  submit(raw){
+    const st=this.st; if(!st || st.over) return;
+    const r=this.round(); if(r.done) return;
+    const guess=String(raw).trim(); if(!guess) return;
+    if(r.g.some(x=>brandKey(x)===brandKey(guess))){ $("lgFb").textContent=`Vous avez déjà proposé « ${guess} » (non compté).`; return; }
+    const b=this.brand(), win=brandMatches(guess,b);
+    r.g.push(guess);
+    if(win){ r.done=true; r.won=true; }
+    else if(this.used(r)>=LOGO_TRIES){ r.done=true; r.won=false; }
+    this.after(r, win);
+  },
+  hint(){
+    const st=this.st; if(!st || st.over) return;
+    const r=this.round(); if(r.done || r.h>=2) return;
+    r.h++;
+    if(this.used(r)>=LOGO_TRIES){ r.done=true; r.won=false; }
+    this.after(r, false, true);
+  },
+  hintText(r){
+    const b=this.brand(), out=[];
+    if(r.h>=1) out.push(`Catégorie : ${b[1]}.`);
+    if(r.h>=2){ const letters=brandKey(b[0]).length; out.push(`Commence par « ${b[0][0].toUpperCase()} », ${letters} lettres.`); }
+    return out;
+  },
+  after(r, win, fromHint){
+    const st=this.st, b=this.brand();
+    if(r.done){
+      const s=this.stats(); s.objets++; if(r.won){ s.trouves++; s.essais+=this.used(r); } lsSet("caviarde.logos.stats",s);
+      $("lgFb").innerHTML = r.won ? `<b>Bravo !</b> C'était ${esc(b[0])}, trouvé en ${plural(this.used(r),"essai")}.` : `Perdu ! C'était <b>${esc(b[0])}</b>.`;
+      if(!st.daily){ st.over=true; if(r.won) fireworks(); }
+      else if(st.rounds.every(x=>x.done)){ st.over=true; this.recordDay(); if(st.rounds.filter(x=>x.won).length>=3) fireworks(); }
+    }else if(fromHint){
+      $("lgFb").textContent="Indice : "+this.hintText(r).slice(-1)[0]+` (${LOGO_TRIES-this.used(r)} essais restants)`;
+    }else{
+      $("lgFb").innerHTML=`<b>Raté !</b> Le logo se précise. <span class="pleft">${LOGO_TRIES-this.used(r)} essais restants</span>`;
+    }
+    this.save(); this.render();
+  },
+  recordDay(){
+    const st=this.st, s=this.stats(), date=st.daily.date;
+    if(s.hist[date]) return;
+    const found=st.rounds.filter(x=>x.won).length;
+    s.hist[date]={found};
+    if(found>=3){ s.streak = s.lastWin===dayBefore(date) ? s.streak+1 : 1; s.lastWin=date; } else s.streak=0;
+    lsSet("caviarde.logos.stats",s);
+  },
+  next(){
+    const st=this.st;
+    if(st.daily){ if(st.cur<st.items.length-1){ st.cur++; this.save(); $("lgFb").textContent=`Logo ${st.cur+1}/${st.items.length} : quelle est cette marque ?`; this.render(); $("lgInput").focus({preventScroll:true}); } }
+    else { this.fresh(); $("lgInput").focus({preventScroll:true}); }
+  },
+  share(box){
+    const st=this.st, em=st.rounds.map(r=>r.won?`✅${this.used(r)}`:"❌").join(" ");
+    const found=st.rounds.filter(r=>r.won).length;
+    const head = st.daily ? `Logos du jour n°${st.daily.n} : ${found}/${st.rounds.length} marques trouvées` : (found?`Logos : trouvé en ${plural(this.used(st.rounds[0]),"essai")}`:"Logos : raté");
+    shareText(`${head}\n${em}\n${location.origin+location.pathname}`, box);
+  },
+  render(){
+    const st=this.st; if(!st) return;
+    const b=this.brand(), r=this.round(), file=(LogoData.map||{})[st.items[st.cur]];
+    $("meta").textContent = st.daily ? `Logos du jour n°${st.daily.n} · logo ${st.cur+1}/${st.items.length}` : "Logos";
+    const dots=$("lgDots"); dots.replaceChildren(); dots.hidden=!st.daily;
+    if(st.daily) st.rounds.forEach((x,i)=>{ const s=document.createElement("span"); s.className="pdot"+(x.done?(x.won?" won":" lost"):"")+(i===st.cur?" cur":""); s.textContent=x.done?(x.won?this.used(x):"✕"):(i+1); dots.append(s); });
+    const img=$("lgImg"), box=$("lgBox");
+    const used=this.used(r), blur=r.done?0:LOGO_BLUR[Math.min(used,LOGO_BLUR.length-1)];
+    box.classList.remove("empty");
+    if(file){
+      const u=LogoData.url(file);
+      if(img.getAttribute("src")!==u){ img.src=u; }
+      img.hidden=false;
+      img.onerror=()=>{ img.hidden=true; box.classList.add("empty"); $("lgFb").textContent="Ce logo ne se charge pas. Passez au suivant."; };
+    }
+    img.style.filter = `blur(${blur}px)` + (used<3 && !r.done ? " grayscale(1)" : "");
+    $("lgLevel").textContent = r.done ? "" : `Netteté ${Math.round(100*(LOGO_BLUR[0]-blur)/LOGO_BLUR[0])} %`;
+    $("lgCredit").textContent = r.done && file ? `${b[0]} · logo : Wikimedia Commons` : "";
+    const ht=this.hintText(r); $("lgHints").replaceChildren(...ht.map(t=>{ const li=document.createElement("li"); li.textContent=t; return li; })); $("lgHints").hidden=!ht.length;
+    const ul=$("lgGuesses"); ul.replaceChildren(...r.g.map(g=>{ const li=document.createElement("li"); li.textContent=g; li.className=brandMatches(g,b)?"ok":"ko"; return li; }));
+    $("lgInput").disabled=r.done; $("lgGo").disabled=r.done; $("lgHint").disabled=r.done || r.h>=2;
+    const nx=$("lgNext"); nx.replaceChildren();
+    if(st.daily && r.done && !st.over){ const bt=document.createElement("button"); bt.className="btn primary"; bt.type="button"; bt.textContent=`Logo suivant (${st.cur+2}/${st.items.length})`; bt.onclick=()=>this.next(); nx.append(bt); }
+    const s=this.stats();
+    $("lgObj").textContent=s.objets; $("lgFound").textContent=s.trouves; $("lgAvg").textContent=s.trouves?(s.essais/s.trouves).toFixed(1).replace(".",","):"–"; $("lgStreak").textContent=s.streak;
+    if(!st.over){ $("lgBanner").hidden=true; return; }
+    const found=st.rounds.filter(x=>x.won).length;
+    endBanner($("lgBanner"),{
+      title: st.daily ? [`${found}/${st.rounds.length} marques trouvées.`] : (found ? ["C'était ", strongText(b[0]), "."] : ["C'était ", strongText(b[0]), "."]),
+      lines: st.daily ? [`Prochaine série (n°${st.daily.n+1}) demain à minuit.`] : [],
+      primary: st.daily ? "Jouer en illimité" : "Logo suivant",
+      onPrimary: ()=>{ if(st.daily) switchMode("free"); else this.next(); },
+      onShare: box=>this.share(box)
+    });
+  }
+};
+$("lgForm").addEventListener("submit",e=>{ e.preventDefault(); const v=$("lgInput").value; $("lgInput").value=""; Logos.submit(v); });
+$("lgHint").addEventListener("click",()=>Logos.hint());
 
 /* ---------- Indices ---------- */
 function hintArticle(){
